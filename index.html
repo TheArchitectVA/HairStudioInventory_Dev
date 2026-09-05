@@ -3,606 +3,797 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Salon Inventory System 2.0 | Redken Shades EQ & Paul Mitchell The Demi</title>
+  <title>HairSalon Studio Inventory System 2.0 - Google Sheets</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;0,700;1,400&family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; }
-    .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    body {
+      font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .sheet-grid-border {
+      border-color: #e0e0e0;
+    }
+    .sheet-cell {
+      border-right: 1px solid #e0e0e0;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .sheet-header-cell {
+      background-color: #f8f9fa;
+      border-right: 1px solid #dadce0;
+      border-bottom: 1px solid #dadce0;
+      color: #5f6368;
+      font-weight: 500;
+      font-size: 11px;
+    }
+    .active-cell-box {
+      box-shadow: inset 0 0 0 2px #1a73e8;
+      position: relative;
+    }
+    .active-cell-box::after {
+      content: '';
+      position: absolute;
+      bottom: -3px;
+      right: -3px;
+      width: 6px;
+      height: 6px;
+      background-color: #1a73e8;
+      border: 1px solid #fff;
+    }
+    /* Google Sheets Conditional Formatting exact colors */
+    .cf-instock {
+      background-color: #b7e1cd !important;
+      color: #0d652d !important;
+    }
+    .cf-lowstock {
+      background-color: #fce8b2 !important;
+      color: #7f6000 !important;
+    }
+    .cf-outofstock {
+      background-color: #f4c7c3 !important;
+      color: #c5221f !important;
+    }
+    /* Custom Scrollbar to match Google Sheets */
+    ::-webkit-scrollbar {
+      width: 9px;
+      height: 9px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f3f4;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #dadce0;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #bdc1c6;
+    }
+    .sheet-tab {
+      border-top: 1px solid #dadce0;
+      border-right: 1px solid #dadce0;
+      border-left: 1px solid #dadce0;
+      color: #3c4043;
+      font-size: 12px;
+      background: #f8f9fa;
+      transition: background 0.15s ease;
+    }
+    .sheet-tab.active {
+      background: #ffffff;
+      color: #137333;
+      font-weight: 600;
+      border-bottom: 3px solid #0f9d58;
+    }
+    .sheet-tab:hover:not(.active) {
+      background: #edeef0;
+    }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
+<body class="bg-[#f8f9fa] text-[#202124] h-screen flex flex-col overflow-hidden text-xs">
 
-  <!-- Top Navigation Header -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+  <!-- GOOGLE SHEETS APP BAR -->
+  <header class="bg-white border-b border-[#dadce0] px-3 pt-2 pb-1.5 flex flex-col gap-1 shrink-0">
+    <div class="flex items-center justify-between">
+      <!-- Left: Logo, Title & Menus -->
       <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold shadow-sm shadow-indigo-200">
-          ✂
-        </div>
+        <!-- Google Sheets Green Icon -->
+        <a href="#" class="flex items-center" title="Sheets Home">
+          <svg class="w-8 h-8 text-[#0f9d58]" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19.35 4H8.65A1.65 1.65 0 0 0 7 5.65v12.7A1.65 1.65 0 0 0 8.65 20h10.7A1.65 1.65 0 0 0 21 18.35V5.65A1.65 1.65 0 0 0 19.35 4ZM10 6.5h3v2h-3v-2Zm0 3.5h3v2h-3v-2Zm0 3.5h3v2h-3v-2Zm-1.5-7v2h-2v-2h2Zm-2 3.5h2v2h-2v-2Zm0 3.5h2v2h-2v-2Zm13 5.5h-11v-1h11v1Zm0-3.5h-3v-2h3v2Zm0-3.5h-3v-2h3v2Zm0-3.5h-3v-2h3v2Z"/>
+          </svg>
+        </a>
+
         <div>
+          <!-- Document Title & Badges -->
           <div class="flex items-center gap-2">
-            <h1 class="text-lg font-bold text-slate-900 tracking-tight">Studio Inventory 2.0</h1>
-            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">Dual-Line</span>
+            <span class="text-[15px] font-normal text-[#202124] font-['Google_Sans',sans-serif] px-1 py-0.5 rounded hover:border hover:border-[#dadce0] border border-transparent cursor-text" contenteditable="true" spellcheck="false">
+              HairSalon Studio Inventory System 2.0
+            </span>
+            <button title="Star" class="text-[#5f6368] hover:text-[#fbbc04]">★</button>
+            <span class="text-[11px] text-[#5f6368] hidden sm:inline-block">In Google Drive</span>
+            <span class="bg-[#e6f4ea] text-[#137333] font-medium text-[10px] px-1.5 py-0.2 rounded border border-[#ceead6]">Saved to Local Storage</span>
           </div>
-          <p class="text-xs text-slate-500">Redken Shades EQ &bull; Paul Mitchell The Demi</p>
+
+          <!-- Menu Bar -->
+          <div class="flex items-center gap-2.5 text-[#3c4043] text-[12px] mt-0.5 select-none">
+            <button onclick="showToast('File menu')" class="hover:bg-[#f1f3f4] px-1.5 py-0.5 rounded">File</button>
+            <button onclick="showToast('Edit menu')" class="hover:bg-[#f1f3f4] px-1.5 py-0.5 rounded">Edit</button>
+            <button onclick="showToast('View menu')" class="hover:bg-[#f1f3f4] px-1.5 py-0.5 rounded">View</button>
+            <button onclick="showToast('Insert menu')" class="hover:bg-[#f1f3f4] px-1.5 py-0.5 rounded">Insert</button>
+            <button onclick="showToast('Format menu')" class="hover:bg-[#f1f3f4] px-1.5 py-0.5 rounded">Format</button>
+            <button onclick="showToast('Data menu')" class="hover:bg-[#f1f3f4] px-1.5 py-0.5 rounded">Data</button>
+            <button onclick="showToast('Tools menu')" class="hover:bg-[#f1f3f4] px-1.5 py-0.5 rounded">Tools</button>
+            <button onclick="openRestockModal()" class="hover:bg-[#fce8e6] text-[#c5221f] font-semibold px-1.5 py-0.5 rounded flex items-center gap-1">
+              <span>Restock Orders</span>
+              <span id="reorderCountBadge" class="bg-[#c5221f] text-white px-1.5 py-0.2 rounded-full text-[9px]">0</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- Quick Action Controls -->
-      <div class="flex flex-wrap items-center gap-2.5">
-        <div class="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs font-medium">
-          <button id="tabMaster" onclick="switchMainTab('master')" class="px-3 py-1.5 rounded-md transition bg-white text-slate-900 shadow-xs">
-            Master View
-          </button>
-          <button id="tabCategory" onclick="switchMainTab('category')" class="px-3 py-1.5 rounded-md transition text-slate-600 hover:text-slate-900">
-            Category Tabs
-          </button>
-        </div>
-        <button onclick="openRestockModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-rose-200 text-xs font-semibold rounded-lg text-rose-700 bg-rose-50 hover:bg-rose-100 transition shadow-xs">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-          Restock List (<span id="restockBadge">0</span>)
+      <!-- Right Action Controls -->
+      <div class="flex items-center gap-2">
+        <button onclick="resetToSpreadsheetDefaults()" title="Reset to original spreadsheet data" class="px-2.5 py-1 text-[#3c4043] hover:bg-[#f1f3f4] border border-[#dadce0] rounded text-[11px] font-medium transition flex items-center gap-1">
+          <svg class="w-3.5 h-3.5 text-[#5f6368]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Reset Sheet
         </button>
-        <button onclick="resetToDefaults()" title="Reset data to spreadsheet defaults" class="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg border border-transparent hover:border-slate-200 transition">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+
+        <button onclick="downloadRestockCSV()" class="px-3 py-1 bg-[#188038] hover:bg-[#137333] text-white text-[12px] font-medium rounded-md shadow-xs transition flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+          Export CSV
+        </button>
+
+        <!-- Share Pill Button -->
+        <button onclick="showToast('Sheet link copied to clipboard')" class="bg-[#c2e7ff] text-[#001d35] hover:bg-[#b3d7ef] font-medium px-4 py-1.5 rounded-full flex items-center gap-1 text-[12px] transition">
+          <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
+          Share
         </button>
       </div>
     </div>
-  </header>
 
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full space-y-6 flex-1">
+    <!-- GOOGLE SHEETS TOOLBAR -->
+    <div class="flex items-center gap-1.5 pt-1 overflow-x-auto text-[#444746] select-none text-[11px] pb-0.5">
+      <!-- Undo / Redo / Print -->
+      <button onclick="undoStock()" title="Undo" class="p-1 hover:bg-[#f1f3f4] rounded text-[#444746]">↶</button>
+      <button onclick="showToast('Redo')" title="Redo" class="p-1 hover:bg-[#f1f3f4] rounded text-[#444746]">↷</button>
+      <button onclick="window.print()" title="Print" class="p-1 hover:bg-[#f1f3f4] rounded text-[#444746]">🖶</button>
+      <span class="h-4 w-px bg-[#dadce0] mx-0.5"></span>
 
-    <!-- Overview Counters -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-      <div class="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs">
-        <span class="text-xs font-medium text-slate-500">Total Formula Items</span>
-        <div class="flex items-baseline justify-between mt-1">
-          <span id="metricTotal" class="text-2xl font-bold text-slate-900">0</span>
-          <span class="text-[11px] text-slate-400 font-medium">SKUs</span>
-        </div>
-      </div>
-      <div class="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs">
-        <span class="text-xs font-medium text-emerald-600">Well Stocked (2+)</span>
-        <div class="flex items-baseline justify-between mt-1">
-          <span id="metricInStock" class="text-2xl font-bold text-emerald-600">0</span>
-          <span id="pctInStock" class="text-[11px] text-emerald-600/75 font-medium">0%</span>
-        </div>
-      </div>
-      <div class="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs">
-        <span class="text-xs font-medium text-amber-600">Low Stock (1 left)</span>
-        <div class="flex items-baseline justify-between mt-1">
-          <span id="metricLowStock" class="text-2xl font-bold text-amber-600">0</span>
-          <span class="text-[11px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded font-medium">Urgent</span>
-        </div>
-      </div>
-      <div class="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs">
-        <span class="text-xs font-medium text-rose-600">Out of Stock (0)</span>
-        <div class="flex items-baseline justify-between mt-1">
-          <span id="metricOutOfStock" class="text-2xl font-bold text-rose-600">0</span>
-          <span class="text-[11px] text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded font-medium">Critical</span>
-        </div>
-      </div>
-    </div>
+      <!-- Zoom -->
+      <span class="px-1.5 py-0.5 hover:bg-[#f1f3f4] rounded cursor-pointer">100% ▾</span>
+      <span class="h-4 w-px bg-[#dadce0] mx-0.5"></span>
 
-    <!-- Sub-Line Tabs / Filter Header -->
-    <div class="space-y-3">
-      <!-- Line Selector (Redken vs Paul Mitchell vs All) -->
-      <div class="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto custom-scrollbar">
-        <button onclick="setProductLine('ALL')" id="lineBtnALL" class="line-toggle-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-900 text-white">
-          All Products
-        </button>
-        <button onclick="setProductLine('Redken Shades EQ')" id="lineBtnRedken" class="line-toggle-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">
-          Redken Shades EQ
-        </button>
-        <button onclick="setProductLine('Paul Mitchell The Demi')" id="lineBtnPM" class="line-toggle-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">
-          Paul Mitchell The Demi
-        </button>
-      </div>
+      <!-- Font / Size -->
+      <span class="px-2 py-0.5 hover:bg-[#f1f3f4] rounded cursor-pointer font-sans">Roboto ▾</span>
+      <span class="h-4 w-px bg-[#dadce0] mx-0.5"></span>
+      <span class="px-1.5 py-0.5 hover:bg-[#f1f3f4] rounded cursor-pointer">10 ▾</span>
+      <span class="h-4 w-px bg-[#dadce0] mx-0.5"></span>
 
-      <!-- Category Filter Pills (When in Category view or Master view) -->
-      <div id="categoryTabsContainer" class="flex items-center gap-1.5 overflow-x-auto pb-1.5 custom-scrollbar text-xs">
-        <!-- Dynamically filled with pills matching spreadsheet tabs -->
-      </div>
-    </div>
+      <!-- Text formatting -->
+      <button class="px-1.5 py-0.5 hover:bg-[#f1f3f4] rounded font-bold">B</button>
+      <button class="px-1.5 py-0.5 hover:bg-[#f1f3f4] rounded italic">I</button>
+      <button class="px-1.5 py-0.5 hover:bg-[#f1f3f4] rounded line-through">S</button>
+      <span class="h-4 w-px bg-[#dadce0] mx-0.5"></span>
 
-    <!-- Search & Quick Filters -->
-    <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center gap-3 justify-between">
-      <div class="relative w-full sm:w-80">
-        <input 
-          type="text" 
-          id="searchInput" 
-          oninput="renderView()" 
-          placeholder="Search by shade code or name (e.g. 09T, Opal, 10BV)..." 
-          class="w-full pl-9 pr-3 py-2 text-xs md:text-sm border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
-        />
-        <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <!-- Fill color -->
+      <div class="flex items-center gap-1 px-1.5 py-0.5 hover:bg-[#f1f3f4] rounded cursor-pointer" title="Fill Color">
+        <span>Fill</span>
+        <span class="w-3 h-3 rounded-full bg-[#b7e1cd] border border-[#a8dab5]"></span>
       </div>
+      <span class="h-4 w-px bg-[#dadce0] mx-0.5"></span>
 
-      <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end">
-        <label class="text-xs text-slate-500 font-medium">Status:</label>
-        <select id="statusFilter" onchange="renderView()" class="border border-slate-200 text-xs rounded-lg px-2.5 py-2 bg-slate-50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          <option value="ALL">All Statuses</option>
+      <!-- Filter by Stock Status -->
+      <div class="flex items-center gap-1 bg-[#f1f3f4] px-2 py-0.5 rounded border border-[#dadce0]">
+        <span class="text-[10px] font-medium text-[#5f6368]">Filter Status:</span>
+        <select id="statusFilterSelect" onchange="renderSheetGrid()" class="bg-transparent text-[11px] font-medium text-[#1f1f1f] focus:outline-none cursor-pointer">
+          <option value="ALL">All Statuses (115 rows)</option>
           <option value="In Stock">In Stock (≥2)</option>
           <option value="Low Stock">Low Stock (1)</option>
           <option value="Out of Stock">Out of Stock (0)</option>
         </select>
       </div>
-    </div>
 
-    <!-- View Content (Master Table vs Category Cards) -->
-    <div id="masterViewSection" class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
-      <div class="overflow-x-auto custom-scrollbar">
-        <table class="min-w-full divide-y divide-slate-200 text-left text-xs md:text-sm">
-          <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] md:text-[11px] font-semibold tracking-wider">
-            <tr>
-              <th scope="col" class="px-5 py-3">Product Line</th>
-              <th scope="col" class="px-5 py-3">Family / Series</th>
-              <th scope="col" class="px-5 py-3">Shade Description</th>
-              <th scope="col" class="px-5 py-3 text-center">Stock Level</th>
-              <th scope="col" class="px-5 py-3">Status</th>
-              <th scope="col" class="px-5 py-3 text-right">Adjust Count</th>
-            </tr>
-          </thead>
-          <tbody id="inventoryTableBody" class="divide-y divide-slate-100">
-            <!-- Dynamic rows populated via JS -->
-          </tbody>
-        </table>
-      </div>
-      <div id="noResultsMaster" class="hidden py-12 text-center text-sm text-slate-500">
-        No formula shades match your current query or filter selections.
+      <!-- Quick Search Bar in Toolbar -->
+      <div class="relative ml-2 flex-1 max-w-xs">
+        <input 
+          type="text" 
+          id="sheetSearchInput" 
+          oninput="renderSheetGrid()" 
+          placeholder="Filter sheet rows (e.g. 09T, Granite, Onyx)..."
+          class="w-full bg-[#f1f3f4] hover:bg-[#e8eaed] focus:bg-white border border-[#dadce0] focus:border-[#1a73e8] rounded px-2 py-0.5 text-[11px] outline-none"
+        />
+        <span class="absolute right-2 top-1 text-[#80868b] text-[10px]">🔍</span>
       </div>
     </div>
+  </header>
 
-    <!-- Category Group View (Matches Spreadsheet Sub-Tabs) -->
-    <div id="categoryViewSection" class="hidden space-y-6">
-      <div id="categoryCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <!-- Dynamic grouped cards populated via JS -->
-      </div>
-      <div id="noResultsCategory" class="hidden py-12 text-center text-sm text-slate-500 bg-white border border-slate-200 rounded-xl">
-        No families match your active filter.
+  <!-- FORMULA / FX BAR -->
+  <div class="bg-white border-b border-[#dadce0] px-3 py-1 flex items-center gap-2 text-xs shrink-0">
+    <div id="cellNameBox" class="w-14 text-center py-0.5 px-1 border-r border-[#dadce0] font-mono text-[#3c4043] font-medium">
+      A1
+    </div>
+    <div class="italic text-[#5f6368] font-serif font-bold text-[13px] px-1 select-none">
+      fx
+    </div>
+    <div class="flex-1 flex items-center">
+      <input 
+        type="text" 
+        id="formulaBarInput" 
+        readonly
+        value="=MASTER_INVENTORY(Color_Family, Shade, Quantity, Status)" 
+        class="w-full text-[#1f1f1f] font-mono text-[11px] bg-transparent outline-none select-text cursor-default"
+      />
+    </div>
+  </div>
+
+  <!-- SPREADSHEET MAIN WORKSPACE -->
+  <main class="flex-1 flex overflow-hidden relative bg-white">
+    <div class="w-full h-full overflow-auto sheet-grid-border" id="tableScrollContainer">
+      <table class="border-collapse w-full min-w-[760px] table-fixed" id="spreadsheetTable">
+        <thead class="sticky top-0 z-20 shadow-xs">
+          <!-- Column Letters Header (A, B, C, D, E) -->
+          <tr class="h-6 text-center select-none">
+            <th class="w-12 sheet-header-cell text-center border-t-0 border-l-0">
+              <div class="w-3 h-3 mx-auto bg-transparent border-t border-l border-[#dadce0] transform rotate-45"></div>
+            </th>
+            <th class="w-48 sheet-header-cell">A</th>
+            <th class="w-64 sheet-header-cell">B</th>
+            <th class="w-32 sheet-header-cell">C</th>
+            <th class="w-44 sheet-header-cell">D</th>
+            <th class="w-36 sheet-header-cell">E</th>
+          </tr>
+          <!-- Row 1: Spreadsheet Header Labels -->
+          <tr class="h-7 text-left font-semibold text-[#3c4043] select-none bg-[#f8f9fa] border-b border-[#dadce0]">
+            <td class="sheet-header-cell text-center font-normal">1</td>
+            <td class="sheet-cell px-3 font-semibold text-[#1f1f1f] bg-[#f8f9fa]">
+              <div class="flex items-center justify-between">
+                <span>Color Family</span>
+                <span class="text-[#80868b] text-[10px]">▼</span>
+              </div>
+            </td>
+            <td class="sheet-cell px-3 font-semibold text-[#1f1f1f] bg-[#f8f9fa]">
+              <div class="flex items-center justify-between">
+                <span>Shade</span>
+                <span class="text-[#80868b] text-[10px]">▼</span>
+              </div>
+            </td>
+            <td class="sheet-cell px-3 font-semibold text-[#1f1f1f] bg-[#f8f9fa] text-center">
+              <div class="flex items-center justify-center gap-1">
+                <span>Quantity</span>
+                <span class="text-[#80868b] text-[10px]">▼</span>
+              </div>
+            </td>
+            <td class="sheet-cell px-3 font-semibold text-[#1f1f1f] bg-[#f8f9fa]">
+              <div class="flex items-center justify-between">
+                <span>Status</span>
+                <span class="text-[#80868b] text-[10px]">▼</span>
+              </div>
+            </td>
+            <td class="sheet-cell px-3 font-semibold text-[#1f1f1f] bg-[#f8f9fa] text-center">
+              <span>Quick Adjust</span>
+            </td>
+          </tr>
+        </thead>
+        <tbody id="sheetTableBody" class="font-normal text-[#202124]">
+          <!-- Dynamic Google Sheets grid rows inserted via JavaScript -->
+        </tbody>
+      </table>
+
+      <!-- Empty state -->
+      <div id="noRowsMessage" class="hidden p-12 text-center text-[#5f6368] text-sm">
+        No matching rows found in this tab. Try clearing the search or filter.
       </div>
     </div>
-
   </main>
 
-  <!-- Restock & Order Modal -->
-  <div id="restockModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
-      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-        <div>
-          <h3 class="text-base font-bold text-slate-900">Restock Replenishment Sheet</h3>
-          <p class="text-xs text-slate-500">Auto-calculated restock to target par level (Default: 3 units each)</p>
+  <!-- GOOGLE SHEETS BOTTOM TAB BAR & STATUS STRIP -->
+  <footer class="bg-[#f8f9fa] border-t border-[#dadce0] flex flex-col shrink-0 select-none z-30">
+    <div class="flex items-center justify-between h-9 px-2">
+      <!-- Left: Add Sheet & Sheet Navigation Tabs -->
+      <div class="flex items-center gap-1 overflow-x-auto h-full flex-1 mr-4" id="sheetTabsScrollWrapper">
+        <!-- Google Sheets Add (+) Button -->
+        <button onclick="showToast('Sheet tabs correspond directly to Master & Categories from your spreadsheet.')" title="Add Sheet" class="w-7 h-7 flex items-center justify-center hover:bg-[#edeef0] rounded-full text-[#5f6368] text-base font-bold shrink-0">
+          +
+        </button>
+
+        <!-- All Sheets Hamburger (≡) Button -->
+        <button onclick="toggleSheetPickerMenu()" title="All Sheets" class="w-7 h-7 flex items-center justify-center hover:bg-[#edeef0] rounded-full text-[#5f6368] text-sm shrink-0">
+          ☰
+        </button>
+
+        <div class="h-5 w-px bg-[#dadce0] mx-1 shrink-0"></div>
+
+        <!-- Dynamic Sheets Tabs Container -->
+        <div id="tabsContainer" class="flex items-end h-full gap-0.5 overflow-x-auto">
+          <!-- Populated by JS -->
         </div>
-        <button onclick="closeRestockModal()" class="text-slate-400 hover:text-slate-600 text-lg leading-none">&times;</button>
       </div>
 
-      <div class="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-4">
-        <div class="flex items-center justify-between text-xs bg-slate-50 p-3 rounded-lg border border-slate-200">
-          <div>
-            <span class="font-semibold text-slate-700">Target Par Stock:</span>
-            <span class="text-slate-500"> 3 bottles per shade</span>
-          </div>
-          <button onclick="downloadRestockCSV()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-md shadow-xs transition flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-            Download CSV Order
-          </button>
-        </div>
+      <!-- Right: Google Sheets Status Calculation Bar -->
+      <div class="flex items-center gap-3 text-[11px] text-[#5f6368] shrink-0 bg-white px-2.5 py-1 border border-[#dadce0] rounded shadow-2xs font-mono">
+        <div>COUNT: <span id="statRowCount" class="font-semibold text-[#202124]">0</span></div>
+        <span class="text-[#dadce0]">|</span>
+        <div>SUM QTY: <span id="statSumQty" class="font-semibold text-[#202124]">0</span></div>
+        <span class="text-[#dadce0]">|</span>
+        <div class="text-[#c5221f] font-semibold">OUT: <span id="statOutStock">0</span></div>
+        <span class="text-[#dadce0]">|</span>
+        <div class="text-[#7f6000] font-semibold">LOW: <span id="statLowStock">0</span></div>
+      </div>
+    </div>
+  </footer>
 
-        <div class="border border-slate-200 rounded-lg overflow-hidden">
-          <table class="min-w-full divide-y divide-slate-200 text-left text-xs">
-            <thead class="bg-slate-50 text-slate-600 font-semibold uppercase text-[10px]">
+  <!-- RESTOCK MODAL (Spreadsheet Order Format) -->
+  <div id="restockModal" class="fixed inset-0 bg-black/40 backdrop-blur-2xs z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-[#dadce0] overflow-hidden">
+      <div class="px-5 py-3.5 bg-[#f8f9fa] border-b border-[#dadce0] flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-[#c5221f]"></span>
+          <h3 class="text-sm font-bold text-[#202124] font-['Google_Sans',sans-serif]">Reorder & Restock Purchase Sheet</h3>
+        </div>
+        <button onclick="closeRestockModal()" class="text-[#5f6368] hover:text-black text-xl font-bold leading-none">&times;</button>
+      </div>
+
+      <div class="p-4 overflow-y-auto flex-1 space-y-3">
+        <p class="text-xs text-[#5f6368]">
+          Below are all formula shades currently at <strong>Out of Stock (0)</strong> or <strong>Low Stock (1)</strong> based on a target par level of <strong>3 units</strong> per shade.
+        </p>
+
+        <div class="border border-[#e0e0e0] rounded overflow-hidden">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-[#f8f9fa] text-[#5f6368] border-b border-[#dadce0] font-medium">
               <tr>
-                <th class="px-4 py-2.5">Line</th>
-                <th class="px-4 py-2.5">Family</th>
-                <th class="px-4 py-2.5">Shade</th>
-                <th class="px-4 py-2.5 text-center">Current</th>
-                <th class="px-4 py-2.5 text-right">Order Needed</th>
+                <th class="p-2">Line</th>
+                <th class="p-2">Color Family</th>
+                <th class="p-2">Shade</th>
+                <th class="p-2 text-center">On Hand</th>
+                <th class="p-2 text-right">Order Needed</th>
               </tr>
             </thead>
-            <tbody id="restockTableBody" class="divide-y divide-slate-100">
-              <!-- Dynamically inserted -->
+            <tbody id="restockModalTbody" class="divide-y divide-[#e0e0e0]">
+              <!-- Injected by JS -->
             </tbody>
           </table>
         </div>
       </div>
 
-      <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex justify-end">
-        <button onclick="closeRestockModal()" class="px-4 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 transition">
-          Done
-        </button>
+      <div class="px-5 py-3 bg-[#f8f9fa] border-t border-[#dadce0] flex items-center justify-between">
+        <span class="text-xs text-[#5f6368]" id="totalItemsToOrderText">Total units to order: 0</span>
+        <div class="flex items-center gap-2">
+          <button onclick="closeRestockModal()" class="px-3 py-1.5 text-xs text-[#3c4043] hover:bg-[#edeef0] rounded border border-[#dadce0]">
+            Close
+          </button>
+          <button onclick="downloadRestockCSV()" class="px-3.5 py-1.5 text-xs font-semibold bg-[#0f9d58] hover:bg-[#137333] text-white rounded shadow-2xs flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+            Download Reorder (.CSV)
+          </button>
+        </div>
       </div>
     </div>
   </div>
 
+  <!-- ALL SHEETS POPUP MENU -->
+  <div id="allSheetsModal" class="fixed inset-0 bg-black/20 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl border border-[#dadce0] max-w-sm w-full p-3 space-y-2">
+      <div class="flex items-center justify-between pb-2 border-b border-[#dadce0]">
+        <h4 class="font-bold text-xs text-[#202124]">All Tabs in Workbook</h4>
+        <button onclick="toggleSheetPickerMenu()" class="text-base text-[#5f6368]">&times;</button>
+      </div>
+      <div id="allSheetsList" class="max-h-60 overflow-y-auto space-y-1 text-xs">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- SIMPLE TOAST NOTIFICATION -->
+  <div id="toastNotification" class="fixed bottom-12 right-6 bg-[#202124] text-white px-3 py-2 rounded-md shadow-lg text-xs opacity-0 pointer-events-none transition-opacity duration-200 z-50">
+    Notification
+  </div>
+
   <script>
-    // Raw Master Data directly reflected from the provided spreadsheet
-    const defaultData = [
-      // Redken Shades EQ Family
-      { line: "Redken Shades EQ", family: "Titanium", shade: "09T Chrome", qty: 0 },
-      { line: "Redken Shades EQ", family: "Titanium", shade: "08T Silver", qty: 2 },
-      { line: "Redken Shades EQ", family: "Titanium", shade: "07T Steel", qty: 3 },
-      { line: "Redken Shades EQ", family: "Titanium", shade: "06T Iron", qty: 4 },
-      { line: "Redken Shades EQ", family: "Green Natural", shade: "08GN Ivy", qty: 3 },
-      { line: "Redken Shades EQ", family: "Green Natural", shade: "06GN Moss", qty: 3 },
-      { line: "Redken Shades EQ", family: "Blue", shade: "09B Sterling", qty: 1 },
-      { line: "Redken Shades EQ", family: "Blue", shade: "01B Onyx", qty: 0 },
-      { line: "Redken Shades EQ", family: "Violet Blue", shade: "08VB Violet Frost", qty: 3 },
-      { line: "Redken Shades EQ", family: "Violet Blue", shade: "07VB Violet Star", qty: 3 },
-      { line: "Redken Shades EQ", family: "Violet Blue", shade: "06VB Violet Lagoon", qty: 4 },
-      { line: "Redken Shades EQ", family: "Pearl", shade: "09P Opal Glow", qty: 0 },
-      { line: "Redken Shades EQ", family: "Pearl", shade: "07P Mother Of Pearl", qty: 2 },
-      { line: "Redken Shades EQ", family: "Natural Ash", shade: "09NA Mist", qty: 1 },
-      { line: "Redken Shades EQ", family: "Natural Ash", shade: "08NA Volcanic", qty: 0 },
-      { line: "Redken Shades EQ", family: "Natural Ash", shade: "07NA Pewter", qty: 3 },
-      { line: "Redken Shades EQ", family: "Natural Ash", shade: "06NA Granite", qty: 2 },
-      { line: "Redken Shades EQ", family: "Natural Ash", shade: "05NA Smoke", qty: 1 },
-      { line: "Redken Shades EQ", family: "Natural Ash", shade: "04NA Storm Cloud", qty: 1 },
-      { line: "Redken Shades EQ", family: "Matte", shade: "09M Sand Dunes", qty: 2 },
-      { line: "Redken Shades EQ", family: "Matte", shade: "07M Driftwood", qty: 2 },
-      { line: "Redken Shades EQ", family: "Matte", shade: "04M Smoked Ceder", qty: 1 },
-      { line: "Redken Shades EQ", family: "Matte", shade: "02M Midnight Ash", qty: 1 },
-      { line: "Redken Shades EQ", family: "Natural", shade: "010N Delicate Natural", qty: 1 },
-      { line: "Redken Shades EQ", family: "Natural", shade: "09N Cafe Au Lait", qty: 1 },
-      { line: "Redken Shades EQ", family: "Natural", shade: "08N Mojave", qty: 0 },
-      { line: "Redken Shades EQ", family: "Natural", shade: "07N Mirage", qty: 3 },
-      { line: "Redken Shades EQ", family: "Natural", shade: "06N Moroccan Sand", qty: 2 },
-      { line: "Redken Shades EQ", family: "Natural", shade: "05N Walnut", qty: 0 },
-      { line: "Redken Shades EQ", family: "Natural", shade: "04N Chicory", qty: 2 },
-      { line: "Redken Shades EQ", family: "Natural", shade: "03N Expresso", qty: 1 },
-      { line: "Redken Shades EQ", family: "Natural Beige", shade: "09NB Irish Creme", qty: 1 },
-      { line: "Redken Shades EQ", family: "Natural Beige", shade: "07NB Chestnut", qty: 0 },
-      { line: "Redken Shades EQ", family: "Natural Beige", shade: "06NB Brandy", qty: 4 },
-      { line: "Redken Shades EQ", family: "Natural Beige", shade: "04NB Maple", qty: 1 },
-      { line: "Redken Shades EQ", family: "Natural Beige", shade: "03NB Mocha Java", qty: 0 },
-      { line: "Redken Shades EQ", family: "Natural Warm", shade: "09NW Cream Soda", qty: 1 },
-      { line: "Redken Shades EQ", family: "Natural Warm", shade: "07NW Milk Tea", qty: 0 },
-      { line: "Redken Shades EQ", family: "Natural Warm", shade: "05NW Macchiato", qty: 2 },
-      { line: "Redken Shades EQ", family: "Natural Warm", shade: "03NW Cocoa Bean", qty: 0 },
-      { line: "Redken Shades EQ", family: "Gold Iridescent", shade: "09GI Hamptons", qty: 1 },
-      { line: "Redken Shades EQ", family: "Gold Iridescent", shade: "08GI St Barths", qty: 0 },
-      { line: "Redken Shades EQ", family: "Gold Iridescent", shade: "06GI Tenerife", qty: 2 },
-      { line: "Redken Shades EQ", family: "Gold Beige", shade: "09GB Butter Cream", qty: 0 },
-      { line: "Redken Shades EQ", family: "Gold Beige", shade: "07GB Butterscotch", qty: 1 },
-      { line: "Redken Shades EQ", family: "Gold Beige", shade: "06GB Toffee", qty: 4 },
-      { line: "Redken Shades EQ", family: "Gold", shade: "09G Vanilla Creme", qty: 0 },
-      { line: "Redken Shades EQ", family: "Gold", shade: "07G Saffron", qty: 4 },
-      { line: "Redken Shades EQ", family: "Gold", shade: "06G St.Tropez", qty: 3 },
-      { line: "Redken Shades EQ", family: "Gold", shade: "05G Caramel", qty: 2 },
-      { line: "Redken Shades EQ", family: "Gold", shade: "03G Cinnamon", qty: 3 },
-      { line: "Redken Shades EQ", family: "Gold Gold", shade: "08GG Gold Dip", qty: 2 },
-      { line: "Redken Shades EQ", family: "Gold Gold", shade: "06GG Midas Touch", qty: 3 },
-      { line: "Redken Shades EQ", family: "Warm Gold", shade: "08WG Golden Apricot", qty: 1 },
-      { line: "Redken Shades EQ", family: "Warm Gold", shade: "06WG Mango", qty: 3 },
-      { line: "Redken Shades EQ", family: "Warm Gold", shade: "04WG Sun Tea", qty: 5 },
-      { line: "Redken Shades EQ", family: "Copper", shade: "08C Cayenne", qty: 2 },
-      { line: "Redken Shades EQ", family: "Copper", shade: "07C Curry", qty: 1 },
-      { line: "Redken Shades EQ", family: "Copper", shade: "05C Chili", qty: 1 },
-      { line: "Redken Shades EQ", family: "Auburn/Auburn Accent", shade: "09AA Papaya", qty: 3 },
-      { line: "Redken Shades EQ", family: "Auburn/Auburn Accent", shade: "06AA Bonfire", qty: 1 },
-      { line: "Redken Shades EQ", family: "Auburn/Auburn Accent", shade: "03A Terra Cotta", qty: 0 },
-      { line: "Redken Shades EQ", family: "Copper Brown", shade: "07CB Spicestone", qty: 1 },
-      { line: "Redken Shades EQ", family: "Copper Brown", shade: "06CB Amber Glaze", qty: 3 },
-      { line: "Redken Shades EQ", family: "Copper Brown", shade: "05CB Brownstone", qty: 1 },
-      { line: "Redken Shades EQ", family: "Copper Brown", shade: "04CB Clove", qty: 0 },
-      { line: "Redken Shades EQ", family: "Red Brown", shade: "09RB Blush", qty: 2 },
-      { line: "Redken Shades EQ", family: "Red Brown", shade: "06RB Cherry Cola", qty: 3 },
-      { line: "Redken Shades EQ", family: "Red Brown", shade: "05RB Manzanita", qty: 0 },
-      { line: "Redken Shades EQ", family: "Red Brown", shade: "03RB Mahogany", qty: 0 },
-      { line: "Redken Shades EQ", family: "Copper Copper", shade: "07CC Urban Fever", qty: 2 },
-      { line: "Redken Shades EQ", family: "Copper Copper", shade: "05CC Electric Shock", qty: 1 },
-      { line: "Redken Shades EQ", family: "Copper Red", shade: "08CR Sunrise", qty: 0 },
-      { line: "Redken Shades EQ", family: "Copper Red", shade: "06CR Sunset", qty: 3 },
-      { line: "Redken Shades EQ", family: "Red", shade: "06R Rocket Fire", qty: 1 },
-      { line: "Redken Shades EQ", family: "Red", shade: "03R Royal Red", qty: 1 },
-      { line: "Redken Shades EQ", family: "Red Red", shade: "07RR Flame", qty: 0 },
-      { line: "Redken Shades EQ", family: "Red Red", shade: "06RR Blaze", qty: 0 },
-      { line: "Redken Shades EQ", family: "Red Violet", shade: "05RV Sangria", qty: 0 },
-      { line: "Redken Shades EQ", family: "Red Violet", shade: "04RV Cabernet", qty: 2 },
-      { line: "Redken Shades EQ", family: "Red Violet", shade: "03RV Merlot", qty: 1 },
-      { line: "Redken Shades EQ", family: "Violet Rose", shade: "09VRo Rose", qty: 2 },
-      { line: "Redken Shades EQ", family: "Violet Rose", shade: "08VRo Rose Quartz", qty: 0 },
-      { line: "Redken Shades EQ", family: "Violet Rose", shade: "06VRo Mauve Rose", qty: 0 },
-      { line: "Redken Shades EQ", family: "Violet Rose", shade: "04VRo Violet Rose", qty: 0 },
-      { line: "Redken Shades EQ", family: "Pastels", shade: "Silver Green", qty: 0 },
-      { line: "Redken Shades EQ", family: "Pastels", shade: "Peach", qty: 0 },
-      { line: "Redken Shades EQ", family: "Pastels", shade: "Pink", qty: 3 },
-      { line: "Redken Shades EQ", family: "Pastels", shade: "Aqua Blue", qty: 0 },
-      { line: "Redken Shades EQ", family: "Violet", shade: "09V Platinum Ice", qty: 0 },
-      { line: "Redken Shades EQ", family: "Violet", shade: "08V Iridescent Quartz", qty: 2 },
-      { line: "Redken Shades EQ", family: "Violet", shade: "07V Crushed Amethyst", qty: 6 },
-      { line: "Redken Shades EQ", family: "Violet", shade: "05V Cosmic Violet", qty: 0 },
-      { line: "Redken Shades EQ", family: "Violet", shade: "03V Orchid", qty: 1 },
-      { line: "Redken Shades EQ", family: "Violet Violet", shade: "010VV Lavender Ice", qty: 1 },
-      { line: "Redken Shades EQ", family: "Kicker", shade: "Violet Kicker", qty: 1 },
-      { line: "Redken Shades EQ", family: "Kicker", shade: "Red Kicker", qty: 0 },
-      { line: "Redken Shades EQ", family: "Kicker", shade: "Orange Kicker", qty: 0 },
-      { line: "Redken Shades EQ", family: "Kicker", shade: "Yellow Kicker", qty: 1 },
-      { line: "Redken Shades EQ", family: "Ash Gold", shade: "07AG Smokey Beige", qty: 1 },
-      { line: "Redken Shades EQ", family: "Natural Chocolate", shade: "07NCh Fondue", qty: 1 },
-      { line: "Redken Shades EQ", family: "Ash Brown Neutral", shade: "04ABn Dark Roast", qty: 1 },
-      { line: "Redken Shades EQ", family: "Ash Brown Neutral", shade: "02ABn Cool Ebony", qty: 3 },
-      { line: "Redken Shades EQ", family: "Violet Gold", shade: "010VG Baby", qty: 1 },
-      { line: "Redken Shades EQ", family: "Natural Beige", shade: "010NB Caramel Cloud", qty: 1 },
+    // Master Dataset directly corresponding to the user's Google Sheet
+    const initialSpreadsheetData = [
+      // Titanium
+      { family: "Titanium", shade: "09T Chrome", qty: 0, line: "Redken Shades EQ" },
+      { family: "Titanium", shade: "08T Silver", qty: 2, line: "Redken Shades EQ" },
+      { family: "Titanium", shade: "07T Steel", qty: 3, line: "Redken Shades EQ" },
+      { family: "Titanium", shade: "06T Iron", qty: 4, line: "Redken Shades EQ" },
+      // Green Natural
+      { family: "Green Natural", shade: "08GN Ivy", qty: 3, line: "Redken Shades EQ" },
+      { family: "Green Natural", shade: "06GN Moss", qty: 3, line: "Redken Shades EQ" },
+      // Blue
+      { family: "Blue", shade: "09B Sterling", qty: 1, line: "Redken Shades EQ" },
+      { family: "Blue", shade: "01B Onyx", qty: 0, line: "Redken Shades EQ" },
+      // Violet Blue
+      { family: "Violet Blue", shade: "08VB Violet Frost", qty: 3, line: "Redken Shades EQ" },
+      { family: "Violet Blue", shade: "07VB Violet Star", qty: 3, line: "Redken Shades EQ" },
+      { family: "Violet Blue", shade: "06VB Violet Lagoon", qty: 4, line: "Redken Shades EQ" },
+      // Pearl
+      { family: "Pearl", shade: "09P Opal Glow", qty: 0, line: "Redken Shades EQ" },
+      { family: "Pearl", shade: "07P Mother Of Pearl", qty: 2, line: "Redken Shades EQ" },
+      // Natural Ash
+      { family: "Natural Ash", shade: "09NA Mist", qty: 1, line: "Redken Shades EQ" },
+      { family: "Natural Ash", shade: "08NA Volcanic", qty: 0, line: "Redken Shades EQ" },
+      { family: "Natural Ash", shade: "07NA Pewter", qty: 3, line: "Redken Shades EQ" },
+      { family: "Natural Ash", shade: "06NA Granite", qty: 2, line: "Redken Shades EQ" },
+      { family: "Natural Ash", shade: "05NA Smoke", qty: 1, line: "Redken Shades EQ" },
+      { family: "Natural Ash", shade: "04NA Storm Cloud", qty: 1, line: "Redken Shades EQ" },
+      // Matte
+      { family: "Matte", shade: "09M Sand Dunes", qty: 2, line: "Redken Shades EQ" },
+      { family: "Matte", shade: "07M Driftwood", qty: 2, line: "Redken Shades EQ" },
+      { family: "Matte", shade: "04M Smoked Ceder", qty: 1, line: "Redken Shades EQ" },
+      { family: "Matte", shade: "02M Midnight Ash", qty: 1, line: "Redken Shades EQ" },
+      // Natural
+      { family: "Natural", shade: "010N Delicate Natural", qty: 1, line: "Redken Shades EQ" },
+      { family: "Natural", shade: "09N Cafe Au Lait", qty: 1, line: "Redken Shades EQ" },
+      { family: "Natural", shade: "08N Mojave", qty: 0, line: "Redken Shades EQ" },
+      { family: "Natural", shade: "07N Mirage", qty: 3, line: "Redken Shades EQ" },
+      { family: "Natural", shade: "06N Moroccan Sand", qty: 2, line: "Redken Shades EQ" },
+      { family: "Natural", shade: "05N Walnut", qty: 0, line: "Redken Shades EQ" },
+      { family: "Natural", shade: "04N Chicory", qty: 2, line: "Redken Shades EQ" },
+      { family: "Natural", shade: "03N Expresso", qty: 1, line: "Redken Shades EQ" },
+      // Natural Beige / Neutral Brown Blonde
+      { family: "Natural Beige", shade: "09NB Irish Creme", qty: 1, line: "Redken Shades EQ" },
+      { family: "Natural Beige", shade: "07NB Chestnut", qty: 0, line: "Redken Shades EQ" },
+      { family: "Natural Beige", shade: "06NB Brandy", qty: 4, line: "Redken Shades EQ" },
+      { family: "Natural Beige", shade: "04NB Maple", qty: 1, line: "Redken Shades EQ" },
+      { family: "Natural Beige", shade: "03NB Mocha Java", qty: 0, line: "Redken Shades EQ" },
+      // Natural Warm
+      { family: "Natural Warm", shade: "09NW Cream Soda", qty: 1, line: "Redken Shades EQ" },
+      { family: "Natural Warm", shade: "07NW Milk Tea", qty: 0, line: "Redken Shades EQ" },
+      { family: "Natural Warm", shade: "05NW Macchiato", qty: 2, line: "Redken Shades EQ" },
+      { family: "Natural Warm", shade: "03NW Cocoa Bean", qty: 0, line: "Redken Shades EQ" },
+      // Gold Iridescent
+      { family: "Gold Iridescent", shade: "09GI Hamptons", qty: 1, line: "Redken Shades EQ" },
+      { family: "Gold Iridescent", shade: "08GI St Barths", qty: 0, line: "Redken Shades EQ" },
+      { family: "Gold Iridescent", shade: "06GI Tenerife", qty: 2, line: "Redken Shades EQ" },
+      // Gold Beige
+      { family: "Gold Beige", shade: "09GB Butter Cream", qty: 0, line: "Redken Shades EQ" },
+      { family: "Gold Beige", shade: "07GB Butterscotch", qty: 1, line: "Redken Shades EQ" },
+      { family: "Gold Beige", shade: "06GB Toffee", qty: 4, line: "Redken Shades EQ" },
+      // Gold
+      { family: "Gold", shade: "09G Vanilla Creme", qty: 0, line: "Redken Shades EQ" },
+      { family: "Gold", shade: "07G Saffron", qty: 4, line: "Redken Shades EQ" },
+      { family: "Gold", shade: "06G St.Tropez", qty: 3, line: "Redken Shades EQ" },
+      { family: "Gold", shade: "05G Caramel", qty: 2, line: "Redken Shades EQ" },
+      { family: "Gold", shade: "03G Cinnamon", qty: 3, line: "Redken Shades EQ" },
+      // Gold Gold
+      { family: "Gold Gold", shade: "08GG Gold Dip", qty: 2, line: "Redken Shades EQ" },
+      { family: "Gold Gold", shade: "06GG Midas Touch", qty: 3, line: "Redken Shades EQ" },
+      // Warm Gold
+      { family: "Warm Gold", shade: "08WG Golden Apricot", qty: 1, line: "Redken Shades EQ" },
+      { family: "Warm Gold", shade: "06WG Mango", qty: 3, line: "Redken Shades EQ" },
+      { family: "Warm Gold", shade: "04WG Sun Tea", qty: 5, line: "Redken Shades EQ" },
+      // Copper
+      { family: "Copper", shade: "08C Cayenne", qty: 2, line: "Redken Shades EQ" },
+      { family: "Copper", shade: "07C Curry", qty: 1, line: "Redken Shades EQ" },
+      { family: "Copper", shade: "05C Chili", qty: 1, line: "Redken Shades EQ" },
+      // Auburn/Auburn Accent
+      { family: "Auburn/Auburn Accent", shade: "09AA Papaya", qty: 3, line: "Redken Shades EQ" },
+      { family: "Auburn/Auburn Accent", shade: "06AA Bonfire", qty: 1, line: "Redken Shades EQ" },
+      { family: "Auburn/Auburn Accent", shade: "03A Terra Cotta", qty: 0, line: "Redken Shades EQ" },
+      // Copper Brown
+      { family: "Copper Brown", shade: "07CB Spicestone", qty: 1, line: "Redken Shades EQ" },
+      { family: "Copper Brown", shade: "06CB Amber Glaze", qty: 3, line: "Redken Shades EQ" },
+      { family: "Copper Brown", shade: "05CB Brownstone", qty: 1, line: "Redken Shades EQ" },
+      { family: "Copper Brown", shade: "04CB Clove", qty: 0, line: "Redken Shades EQ" },
+      // Red Brown
+      { family: "Red Brown", shade: "09RB Blush", qty: 2, line: "Redken Shades EQ" },
+      { family: "Red Brown", shade: "06RB Cherry Cola", qty: 3, line: "Redken Shades EQ" },
+      { family: "Red Brown", shade: "05RB Manzanita", qty: 0, line: "Redken Shades EQ" },
+      { family: "Red Brown", shade: "03RB Mahogany", qty: 0, line: "Redken Shades EQ" },
+      // Copper Copper
+      { family: "Copper Copper", shade: "07CC Urban Fever", qty: 2, line: "Redken Shades EQ" },
+      { family: "Copper Copper", shade: "05CC Electric Shock", qty: 1, line: "Redken Shades EQ" },
+      // Copper Red
+      { family: "Copper Red", shade: "08CR Sunrise", qty: 0, line: "Redken Shades EQ" },
+      { family: "Copper Red", shade: "06CR Sunset", qty: 3, line: "Redken Shades EQ" },
+      // Red
+      { family: "Red", shade: "06R Rocket Fire", qty: 1, line: "Redken Shades EQ" },
+      { family: "Red", shade: "03R Royal Red", qty: 1, line: "Redken Shades EQ" },
+      // Red Red
+      { family: "Red Red", shade: "07RR Flame", qty: 0, line: "Redken Shades EQ" },
+      { family: "Red Red", shade: "06RR Blaze", qty: 0, line: "Redken Shades EQ" },
+      // Red Violet
+      { family: "Red Violet", shade: "05RV Sangria", qty: 0, line: "Redken Shades EQ" },
+      { family: "Red Violet", shade: "04RV Cabernet", qty: 2, line: "Redken Shades EQ" },
+      { family: "Red Violet", shade: "03RV Merlot", qty: 1, line: "Redken Shades EQ" },
+      // Violet Rose
+      { family: "Violet Rose", shade: "09VRo Rose", qty: 2, line: "Redken Shades EQ" },
+      { family: "Violet Rose", shade: "08VRo Rose Quartz", qty: 0, line: "Redken Shades EQ" },
+      { family: "Violet Rose", shade: "06VRo Mauve Rose", qty: 0, line: "Redken Shades EQ" },
+      { family: "Violet Rose", shade: "04VRo Violet Rose", qty: 0, line: "Redken Shades EQ" },
+      // Pastels
+      { family: "Pastels", shade: "Silver Green", qty: 0, line: "Redken Shades EQ" },
+      { family: "Pastels", shade: "Peach", qty: 0, line: "Redken Shades EQ" },
+      { family: "Pastels", shade: "Pink", qty: 3, line: "Redken Shades EQ" },
+      { family: "Pastels", shade: "Aqua Blue", qty: 0, line: "Redken Shades EQ" },
+      // Violet
+      { family: "Violet", shade: "09V Platinum Ice", qty: 0, line: "Redken Shades EQ" },
+      { family: "Violet", shade: "08V Iridescent Quartz", qty: 2, line: "Redken Shades EQ" },
+      { family: "Violet", shade: "07V Crushed Amethyst", qty: 6, line: "Redken Shades EQ" },
+      { family: "Violet", shade: "05V Cosmic Violet", qty: 0, line: "Redken Shades EQ" },
+      { family: "Violet", shade: "03V Orchid", qty: 1, line: "Redken Shades EQ" },
+      // Violet Violet
+      { family: "Violet Violet", shade: "010VV Lavender Ice", qty: 1, line: "Redken Shades EQ" },
+      // Kicker
+      { family: "Kicker", shade: "Violet Kicker", qty: 1, line: "Redken Shades EQ" },
+      { family: "Kicker", shade: "Red Kicker", qty: 0, line: "Redken Shades EQ" },
+      { family: "Kicker", shade: "Orange Kicker", qty: 0, line: "Redken Shades EQ" },
+      { family: "Kicker", shade: "Yellow Kicker", qty: 1, line: "Redken Shades EQ" },
+      // Extra Shades
+      { family: "Ash Gold", shade: "07AG Smokey Beige", qty: 1, line: "Redken Shades EQ" },
+      { family: "Natural Chocolate", shade: "07NCh Fondue", qty: 1, line: "Redken Shades EQ" },
+      { family: "Ash Brown Neutral", shade: "04ABn Dark Roast", qty: 1, line: "Redken Shades EQ" },
+      { family: "Ash Brown Neutral", shade: "02ABn Cool Ebony", qty: 3, line: "Redken Shades EQ" },
+      { family: "Violet Gold", shade: "010VG Baby", qty: 1, line: "Redken Shades EQ" },
+      { family: "Natural Beige", shade: "010NB Caramel Cloud", qty: 1, line: "Redken Shades EQ" },
 
       // Paul Mitchell The Demi Line
-      { line: "Paul Mitchell The Demi", family: "Natural", shade: "10N Natural", qty: 2 },
-      { line: "Paul Mitchell The Demi", family: "Natural Beige", shade: "10NB Natural Beige", qty: 2 },
-      { line: "Paul Mitchell The Demi", family: "Blue Violet", shade: "10BV Blue Violet", qty: 1 },
-      { line: "Paul Mitchell The Demi", family: "Gold Violet", shade: "10Gv Gold Violet", qty: 6 },
-      { line: "Paul Mitchell The Demi", family: "Natural", shade: "3N Natural", qty: 1 },
-      { line: "Paul Mitchell The Demi", family: "Chocolate", shade: "4CH Chocolate", qty: 1 },
-      { line: "Paul Mitchell The Demi", family: "Natural", shade: "4N Natural", qty: 2 },
-      { line: "Paul Mitchell The Demi", family: "Natural Beige", shade: "4NB Natural Beige", qty: 1 },
-      { line: "Paul Mitchell The Demi", family: "Natural Beige", shade: "5NB Natural Beige", qty: 2 },
-      { line: "Paul Mitchell The Demi", family: "Chocolate", shade: "6CH Chocolate", qty: 2 },
-      { line: "Paul Mitchell The Demi", family: "Gold Violet", shade: "6Gv Gold Violet", qty: 6 },
-      { line: "Paul Mitchell The Demi", family: "Natural Beige", shade: "6NB Dark Natural Beige", qty: 1 },
-      { line: "Paul Mitchell The Demi", family: "Red", shade: "6R Red", qty: 1 },
-      { line: "Paul Mitchell The Demi", family: "Gold Beige", shade: "7Gb Gold Beige", qty: 1 },
-      { line: "Paul Mitchell The Demi", family: "Natural Beige", shade: "7NB Natural Beige", qty: 2 },
-      { line: "Paul Mitchell The Demi", family: "Natural Copper", shade: "7NC Natural Copper", qty: 1 },
-      { line: "Paul Mitchell The Demi", family: "Blue Violet", shade: "8BV Blue Violet", qty: 1 },
-      { line: "Paul Mitchell The Demi", family: "Chocolate", shade: "8CH Light Chocolate Blonde", qty: 1 },
-      { line: "Paul Mitchell The Demi", family: "Gold Violet", shade: "8Gv Gold Violet", qty: 6 },
-      { line: "Paul Mitchell The Demi", family: "Natural", shade: "8N Natural", qty: 1 },
-      { line: "Paul Mitchell The Demi", family: "Gold", shade: "9G Gold", qty: 2 },
-      { line: "Paul Mitchell The Demi", family: "Gold Beige", shade: "9Gb Gold Beige", qty: 1 },
-      { line: "Paul Mitchell The Demi", family: "Matte Tone", shade: "9MT Light Blonde Matte Tone", qty: 1 },
-      { line: "Paul Mitchell The Demi", family: "Natural", shade: "9N Natural", qty: 2 },
-      { line: "Paul Mitchell The Demi", family: "Natural Beige", shade: "9NB Natural Beige", qty: 1 },
-      { line: "Paul Mitchell The Demi", family: "Pearl", shade: "9P Pearl", qty: 2 }
+      { family: "Paul Mitchell TD", shade: "[Paul Mitchell TD] 10N Natural", qty: 2, line: "Paul Mitchell The Demi" },
+      { family: "Paul Mitchell TD", shade: "[Paul Mitchell TD] 10NB Natural Beige", qty: 2, line: "Paul Mitchell The Demi" },
+      { family: "Paul Mitchell TD", shade: "[Paul Mitchell TD] 10BV Blue Violet", qty: 1, line: "Paul Mitchell The Demi" },
+      { family: "Paul Mitchell TD", shade: "[Paul Mitchell TD] 10Gv Gold Violet", qty: 6, line: "Paul Mitchell The Demi" },
+      { family: "Paul Mitchell TD", shade: "[Paul Mitchell TD] 3N Natural", qty: 1, line: "Paul Mitchell The Demi" },
+      { family: "Paul Mitchell TD", shade: "[Paul Mitchell TD] 4CH Chocolate", qty: 1, line: "Paul Mitchell The Demi" },
+      { family: "Paul Mitchell TD", shade: "[Paul Mitchell TD] 4N Natural", qty: 2, line: "Paul Mitchell The Demi" },
+      { family: "Paul Mitchell TD", shade: "[Paul Mitchell TD] 4NB Natural Beige", qty: 1, line: "Paul Mitchell The Demi" },
+      { family: "Paul Mitchell TD", shade: "[Paul Mitchell TD] 5NB Natural Beige", qty: 2, line: "Paul Mitchell The Demi" },
+      { family: "Paul Mitchell TD", shade: "[Paul Mitchell TD] 6CH Chocolate", qty: 2, line: "Paul Mitchell The Demi" },
+      { family: "Paul Mitchell TD", shade: "[Paul Mitchell TD] 6Gv Gold Violet", qty: 6, line: "Paul Mitchell The Demi" },
+      { family: "Paul Mitchell TD", shade: "[Paul Mitchell TD] 6NB Dark Natural Beige", qty: 1, line: "Paul Mitchell The Demi" },
+      { family: "Paul Mitchell TD", shade: "[Paul Mitchell TD] 6R Red", qty: 1, line: "Paul Mitchell The Demi" },
+      { family: "Paul Mitchell TD", shade: "[Paul Mitchell TD] 7Gb Gold Beige", qty: 1, line: "Paul Mitchell The Demi" },
+      { family: "Paul Mitchell TD", shade: "[Paul Mitchell TD] 7NB Natural Beige", qty: 2, line: "Paul Mitchell The Demi" },
+      { family: "Paul Mitchell TD", shade: "[Paul Mitchell TD] 7NC Natural Copper", qty: 1, line: "Paul Mitchell The Demi" },
+      { family: "Paul Mitchell TD", shade: "[Paul Mitchell TD] 8BV Blue Violet", qty: 1, line: "Paul Mitchell The Demi" },
+      { family: "Paul Mitchell TD", shade: "[Paul Mitchell TD] 8CH Light Chocolate Blonde", qty: 1, line: "Paul Mitchell The Demi" },
+      { family: "Paul Mitchell TD", shade: "[Paul Mitchell TD] 8Gv Gold Violet", qty: 6, line: "Paul Mitchell The Demi" },
+      { family: "Paul Mitchell TD", shade: "[Paul Mitchell TD] 8N Natural", qty: 1, line: "Paul Mitchell The Demi" },
+      { family: "Paul Mitchell TD", shade: "[Paul Mitchell TD] 9G Gold", qty: 2, line: "Paul Mitchell The Demi" },
+      { family: "Paul Mitchell TD", shade: "[Paul Mitchell TD] 9Gb Gold Beige", qty: 1, line: "Paul Mitchell The Demi" },
+      { family: "Paul Mitchell TD", shade: "[Paul Mitchell TD] 9MT Light Blonde Matte Tone", qty: 1, line: "Paul Mitchell The Demi" },
+      { family: "Paul Mitchell TD", shade: "[Paul Mitchell TD] 9N Natural", qty: 2, line: "Paul Mitchell The Demi" },
+      { family: "Paul Mitchell TD", shade: "[Paul Mitchell TD] 9NB Natural Beige", qty: 1, line: "Paul Mitchell The Demi" },
+      { family: "Paul Mitchell TD", shade: "[Paul Mitchell TD] 9P Pearl", qty: 2, line: "Paul Mitchell The Demi" }
     ];
 
-    let inventory = JSON.parse(localStorage.getItem('salon_inventory_data_v2')) || defaultData;
-    let currentLine = 'ALL';
-    let currentFamily = 'ALL';
-    let currentMainTab = 'master'; // 'master' or 'category'
+    // Worksheets list mirroring the tabs from your spreadsheet
+    const workbookSheets = [
+      "Master Inventory",
+      "Titanium",
+      "Green Natural",
+      "Blue",
+      "Violet Blue",
+      "Pearl",
+      "Natural Ash",
+      "Matte",
+      "Natural",
+      "Neutral Brown Blonde",
+      "Natural Warm",
+      "Gold Iridescent",
+      "Gold Beige",
+      "Gold",
+      "Gold Gold",
+      "Warm Gold",
+      "Copper",
+      "Auburn/Auburn Accent",
+      "Copper Brown",
+      "Red Brown",
+      "Copper Copper",
+      "Copper Red",
+      "Red",
+      "Red Red",
+      "Red Violet",
+      "Violet Rose",
+      "Pastels",
+      "Violet",
+      "Violet Violet",
+      "Kicker",
+      "Paul Mitchell TD"
+    ];
+
+    let currentActiveSheet = "Master Inventory";
+    let inventoryState = JSON.parse(localStorage.getItem('hairsalon_gsheets_db')) || initialSpreadsheetData;
+    let historyStack = [];
+    let selectedCellId = "A1";
 
     function saveState() {
-      localStorage.setItem('salon_inventory_data_v2', JSON.stringify(inventory));
-      renderView();
+      localStorage.setItem('hairsalon_gsheets_db', JSON.stringify(inventoryState));
+      renderSheetGrid();
+      updateBottomCalculations();
     }
 
-    function resetToDefaults() {
-      if (confirm("Reset inventory to the spreadsheet's original quantities?")) {
-        inventory = JSON.parse(JSON.stringify(defaultData));
-        saveState();
-      }
+    function calculateStatus(qty) {
+      if (qty <= 0) return "Out of Stock";
+      if (qty === 1) return "Low Stock";
+      return "In Stock";
     }
 
-    function getStockStatus(qty) {
-      if (qty <= 0) return { label: "Out of Stock", badge: "bg-rose-50 text-rose-700 border-rose-200" };
-      if (qty === 1) return { label: "Low Stock", badge: "bg-amber-50 text-amber-700 border-amber-200" };
-      return { label: "In Stock", badge: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+    function resetToSpreadsheetDefaults() {
+      inventoryState = JSON.parse(JSON.stringify(initialSpreadsheetData));
+      saveState();
+      showToast("Reset all quantities to Google Sheet defaults.");
     }
 
-    function updateStock(index, delta) {
-      inventory[index].qty = Math.max(0, inventory[index].qty + delta);
+    function setActiveSheet(sheetName) {
+      currentActiveSheet = sheetName;
+      renderSheetTabs();
+      renderSheetGrid();
+      document.getElementById('formulaBarInput').value = `=FILTER(Inventory, Family = "${sheetName}")`;
+      document.getElementById('tableScrollContainer').scrollTop = 0;
+    }
+
+    function renderSheetTabs() {
+      const container = document.getElementById('tabsContainer');
+      container.innerHTML = '';
+
+      workbookSheets.forEach(sheet => {
+        const isActive = sheet === currentActiveSheet;
+        const tab = document.createElement('button');
+        tab.className = `sheet-tab px-3 py-1.5 flex items-center gap-1.5 shrink-0 ${isActive ? 'active' : ''}`;
+        tab.innerHTML = `
+          <span>${sheet}</span>
+          <span class="text-[9px] text-[#80868b] hover:text-[#202124]">▾</span>
+        `;
+        tab.onclick = () => setActiveSheet(sheet);
+        container.appendChild(tab);
+      });
+    }
+
+    function selectCell(cellElement, colLetter, rowNumber, cellValue) {
+      document.querySelectorAll('.active-cell-box').forEach(el => el.classList.remove('active-cell-box'));
+      cellElement.classList.add('active-cell-box');
+      selectedCellId = `${colLetter}${rowNumber}`;
+      document.getElementById('cellNameBox').innerText = selectedCellId;
+      document.getElementById('formulaBarInput').value = cellValue;
+    }
+
+    function updateItemQty(originalIndex, delta) {
+      const prev = inventoryState[originalIndex].qty;
+      historyStack.push({ index: originalIndex, prevQty: prev });
+      inventoryState[originalIndex].qty = Math.max(0, prev + delta);
       saveState();
     }
 
-    function setProductLine(line) {
-      currentLine = line;
-      currentFamily = 'ALL';
-      
-      document.querySelectorAll('.line-toggle-btn').forEach(btn => {
-        btn.className = 'line-toggle-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition';
-      });
-
-      if (line === 'ALL') {
-        document.getElementById('lineBtnALL').className = 'line-toggle-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-900 text-white shadow-xs';
-      } else if (line === 'Redken Shades EQ') {
-        document.getElementById('lineBtnRedken').className = 'line-toggle-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white shadow-xs';
-      } else if (line === 'Paul Mitchell The Demi') {
-        document.getElementById('lineBtnPM').className = 'line-toggle-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-violet-600 text-white shadow-xs';
+    function undoStock() {
+      if (historyStack.length === 0) {
+        showToast("Nothing to undo");
+        return;
       }
-
-      renderCategoryPills();
-      renderView();
+      const last = historyStack.pop();
+      inventoryState[last.index].qty = last.prevQty;
+      saveState();
+      showToast("Undo stock adjustment");
     }
 
-    function switchMainTab(tab) {
-      currentMainTab = tab;
-      const masterBtn = document.getElementById('tabMaster');
-      const catBtn = document.getElementById('tabCategory');
-      const masterView = document.getElementById('masterViewSection');
-      const catView = document.getElementById('categoryViewSection');
-
-      if (tab === 'master') {
-        masterBtn.className = "px-3 py-1.5 rounded-md transition bg-white text-slate-900 shadow-xs font-semibold";
-        catBtn.className = "px-3 py-1.5 rounded-md transition text-slate-600 hover:text-slate-900";
-        masterView.classList.remove('hidden');
-        catView.classList.add('hidden');
-      } else {
-        catBtn.className = "px-3 py-1.5 rounded-md transition bg-white text-slate-900 shadow-xs font-semibold";
-        masterBtn.className = "px-3 py-1.5 rounded-md transition text-slate-600 hover:text-slate-900";
-        catView.classList.remove('hidden');
-        masterView.classList.add('hidden');
-      }
-      renderView();
-    }
-
-    function renderCategoryPills() {
-      const container = document.getElementById('categoryTabsContainer');
-      container.innerHTML = '';
-
-      let availableFamilies = inventory
-        .filter(item => currentLine === 'ALL' || item.line === currentLine)
-        .map(item => item.family);
-      
-      const uniqueFamilies = ['ALL', ...new Set(availableFamilies)].sort();
-
-      uniqueFamilies.forEach(fam => {
-        const btn = document.createElement('button');
-        const isActive = fam === currentFamily;
-        btn.className = `px-2.5 py-1 rounded-full whitespace-nowrap font-medium transition ${
-          isActive 
-            ? 'bg-slate-900 text-white shadow-xs' 
-            : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
-        }`;
-        btn.textContent = fam === 'ALL' ? 'All Families' : fam;
-        btn.onclick = () => {
-          currentFamily = fam;
-          renderCategoryPills();
-          renderView();
-        };
-        container.appendChild(btn);
-      });
-    }
-
-    function renderView() {
-      const search = document.getElementById('searchInput').value.trim().toLowerCase();
-      const status = document.getElementById('statusFilter').value;
-
-      // Update Top Metrics
-      const total = inventory.length;
-      const inStock = inventory.filter(i => i.qty >= 2).length;
-      const lowStock = inventory.filter(i => i.qty === 1).length;
-      const outStock = inventory.filter(i => i.qty === 0).length;
-
-      document.getElementById('metricTotal').innerText = total;
-      document.getElementById('metricInStock').innerText = inStock;
-      document.getElementById('pctInStock').innerText = `${Math.round((inStock / total) * 100)}%`;
-      document.getElementById('metricLowStock').innerText = lowStock;
-      document.getElementById('metricOutOfStock').innerText = outStock;
-      document.getElementById('restockBadge').innerText = lowStock + outStock;
-
-      // Filter Data
-      const filtered = inventory.map((item, idx) => ({ ...item, originalIndex: idx })).filter(item => {
-        const matchLine = currentLine === 'ALL' || item.line === currentLine;
-        const matchFamily = currentFamily === 'ALL' || item.family === currentFamily;
-        const statusObj = getStockStatus(item.qty);
-        const matchStatus = status === 'ALL' || statusObj.label === status;
-        const matchSearch = item.shade.toLowerCase().includes(search) || 
-                            item.family.toLowerCase().includes(search) ||
-                            item.line.toLowerCase().includes(search);
-        return matchLine && matchFamily && matchStatus && matchSearch;
-      });
-
-      // Render Master Table
-      const tbody = document.getElementById('inventoryTableBody');
+    function renderSheetGrid() {
+      const tbody = document.getElementById('sheetTableBody');
+      const search = document.getElementById('sheetSearchInput').value.trim().toLowerCase();
+      const statusFilter = document.getElementById('statusFilterSelect').value;
       tbody.innerHTML = '';
-      
-      filtered.forEach(item => {
-        const statusObj = getStockStatus(item.qty);
-        const isRedken = item.line === "Redken Shades EQ";
+
+      // Determine items for current sheet tab
+      let tabItems = inventoryState.map((item, idx) => ({ ...item, originalIndex: idx }));
+
+      if (currentActiveSheet !== "Master Inventory") {
+        if (currentActiveSheet === "Neutral Brown Blonde") {
+          tabItems = tabItems.filter(i => i.family === "Natural Beige" && i.line === "Redken Shades EQ");
+        } else {
+          tabItems = tabItems.filter(i => i.family === currentActiveSheet);
+        }
+      }
+
+      // Filter by Status and Search
+      const filtered = tabItems.filter(item => {
+        const status = calculateStatus(item.qty);
+        const matchStatus = statusFilter === 'ALL' || status === statusFilter;
+        const matchSearch = item.shade.toLowerCase().includes(search) || 
+                            item.family.toLowerCase().includes(search);
+        return matchStatus && matchSearch;
+      });
+
+      if (filtered.length === 0) {
+        document.getElementById('noRowsMessage').classList.remove('hidden');
+      } else {
+        document.getElementById('noRowsMessage').classList.add('hidden');
+      }
+
+      filtered.forEach((item, index) => {
+        const rowNumber = index + 2; // Row 1 is header
+        const status = calculateStatus(item.qty);
+
+        // Google Sheets conditional formatting CSS class
+        let cfClass = 'cf-instock';
+        if (status === 'Low Stock') cfClass = 'cf-lowstock';
+        if (status === 'Out of Stock') cfClass = 'cf-outofstock';
 
         const tr = document.createElement('tr');
-        tr.className = "hover:bg-slate-50/70 transition";
+        tr.className = "h-8 hover:bg-[#f1f3f4]/40 transition text-xs";
+
         tr.innerHTML = `
-          <td class="px-5 py-3.5 whitespace-nowrap">
-            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium ${isRedken ? 'bg-indigo-50 text-indigo-700' : 'bg-violet-50 text-violet-700'}">
-              ${isRedken ? 'Redken Shades EQ' : 'Paul Mitchell The Demi'}
-            </span>
+          <!-- Row Number Index -->
+          <td class="sheet-header-cell text-center select-none cursor-pointer">${rowNumber}</td>
+          
+          <!-- Col A: Color Family -->
+          <td class="sheet-cell px-3 text-[#3c4043] cursor-cell" onclick="selectCell(this, 'A', ${rowNumber}, '${item.family}')">
+            ${item.family}
           </td>
-          <td class="px-5 py-3.5 font-medium text-slate-800 whitespace-nowrap">${item.family}</td>
-          <td class="px-5 py-3.5 font-semibold text-slate-900">${item.shade}</td>
-          <td class="px-5 py-3.5 text-center">
-            <span class="text-sm font-bold ${item.qty === 0 ? 'text-rose-600' : item.qty === 1 ? 'text-amber-600' : 'text-slate-800'}">
-              ${item.qty}
-            </span>
+
+          <!-- Col B: Shade -->
+          <td class="sheet-cell px-3 font-medium text-[#202124] cursor-cell flex items-center justify-between" onclick="selectCell(this, 'B', ${rowNumber}, '${item.shade}')">
+            <span>${item.shade}</span>
+            <span class="text-[9px] text-[#80868b]">${item.line === 'Paul Mitchell The Demi' ? 'PM' : 'Redken'}</span>
           </td>
-          <td class="px-5 py-3.5 whitespace-nowrap">
-            <span class="inline-flex items-center border text-[11px] font-medium px-2 py-0.5 rounded-full ${statusObj.badge}">
-              ${statusObj.label}
-            </span>
+
+          <!-- Col C: Quantity -->
+          <td class="sheet-cell px-3 text-center font-mono font-semibold text-[#202124] cursor-cell" onclick="selectCell(this, 'C', ${rowNumber}, '${item.qty}')">
+            ${item.qty}
           </td>
-          <td class="px-5 py-3.5 text-right whitespace-nowrap">
-            <div class="inline-flex rounded-lg border border-slate-200 bg-white shadow-xs overflow-hidden">
-              <button onclick="updateStock(${item.originalIndex}, -1)" class="px-2.5 py-1 text-slate-500 hover:text-slate-900 hover:bg-slate-100 font-bold border-r border-slate-200 transition">-</button>
-              <button onclick="updateStock(${item.originalIndex}, 1)" class="px-2.5 py-1 text-slate-500 hover:text-slate-900 hover:bg-slate-100 font-bold transition">+</button>
+
+          <!-- Col D: Status with Conditional Formatting -->
+          <td class="sheet-cell px-3 font-semibold ${cfClass} cursor-cell" onclick="selectCell(this, 'D', ${rowNumber}, '${status}')">
+            ${status}
+          </td>
+
+          <!-- Col E: Quick Adjust (+ / -) -->
+          <td class="sheet-cell px-2 text-center bg-white">
+            <div class="inline-flex items-center gap-1">
+              <button onclick="updateItemQty(${item.originalIndex}, -1)" title="Decrease Stock" class="w-5 h-5 flex items-center justify-center border border-[#dadce0] rounded hover:bg-[#f1f3f4] text-[#3c4043] font-bold text-xs">-</button>
+              <button onclick="updateItemQty(${item.originalIndex}, 1)" title="Increase Stock" class="w-5 h-5 flex items-center justify-center border border-[#dadce0] rounded hover:bg-[#f1f3f4] text-[#3c4043] font-bold text-xs">+</button>
             </div>
           </td>
         `;
+
         tbody.appendChild(tr);
       });
 
-      document.getElementById('noResultsMaster').classList.toggle('hidden', filtered.length > 0);
-
-      // Render Category Card Groups (matches spreadsheet category tabs)
-      const cardsGrid = document.getElementById('categoryCardsGrid');
-      cardsGrid.innerHTML = '';
-
-      // Group filtered by family
-      const groupedByFamily = filtered.reduce((acc, item) => {
-        if (!acc[item.family]) acc[item.family] = [];
-        acc[item.family].push(item);
-        return acc;
-      }, {});
-
-      const familyKeys = Object.keys(groupedByFamily).sort();
-      familyKeys.forEach(family => {
-        const items = groupedByFamily[family];
-        const card = document.createElement('div');
-        card.className = "bg-white border border-slate-200 rounded-xl p-4 shadow-xs flex flex-col justify-between";
-        
-        let itemsHtml = items.map(i => {
-          const s = getStockStatus(i.qty);
-          return `
-            <div class="flex items-center justify-between py-2 border-b border-slate-100 last:border-0 text-xs">
-              <div class="truncate pr-2">
-                <span class="font-semibold text-slate-800">${i.shade}</span>
-                <span class="block text-[10px] text-slate-400">${i.line}</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="font-bold text-xs ${i.qty === 0 ? 'text-rose-600' : 'text-slate-700'}">${i.qty}</span>
-                <div class="inline-flex rounded border border-slate-200 text-xs">
-                  <button onclick="updateStock(${i.originalIndex}, -1)" class="px-1.5 py-0.5 hover:bg-slate-100 font-bold border-r border-slate-200">-</button>
-                  <button onclick="updateStock(${i.originalIndex}, 1)" class="px-1.5 py-0.5 hover:bg-slate-100 font-bold">+</button>
-                </div>
-              </div>
-            </div>
-          `;
-        }).join('');
-
-        card.innerHTML = `
-          <div>
-            <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
-              <h4 class="font-bold text-slate-900 text-sm">${family}</h4>
-              <span class="text-[11px] px-2 py-0.5 bg-slate-100 rounded text-slate-500 font-medium">${items.length} shades</span>
-            </div>
-            <div class="divide-y divide-slate-50">
-              ${itemsHtml}
-            </div>
-          </div>
-        `;
-        cardsGrid.appendChild(card);
-      });
-
-      document.getElementById('noResultsCategory').classList.toggle('hidden', familyKeys.length > 0);
+      updateBottomCalculations();
     }
 
-    // Modal & Restock Functions
+    function updateBottomCalculations() {
+      const total = inventoryState.length;
+      const sumQty = inventoryState.reduce((acc, curr) => acc + curr.qty, 0);
+      const outStock = inventoryState.filter(i => i.qty === 0).length;
+      const lowStock = inventoryState.filter(i => i.qty === 1).length;
+
+      document.getElementById('statRowCount').innerText = total;
+      document.getElementById('statSumQty').innerText = sumQty;
+      document.getElementById('statOutStock').innerText = outStock;
+      document.getElementById('statLowStock').innerText = lowStock;
+      document.getElementById('reorderCountBadge').innerText = outStock + lowStock;
+    }
+
+    // Modal & Order Sheet Actions
     function openRestockModal() {
       const modal = document.getElementById('restockModal');
-      const tbody = document.getElementById('restockTableBody');
+      const tbody = document.getElementById('restockModalTbody');
       tbody.innerHTML = '';
 
-      const needed = inventory.filter(i => i.qty < 2);
+      const reorderList = inventoryState.filter(i => i.qty < 2);
+      let totalToOrder = 0;
 
-      if (needed.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400">Everything is well-stocked (minimum 2+ on hand)!</td></tr>`;
+      if (reorderList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-[#5f6368]">All 115 shades are at or above par stock level (≥ 2 units)!</td></tr>`;
       } else {
-        needed.forEach(i => {
-          const toOrder = Math.max(1, 3 - i.qty);
+        reorderList.forEach(item => {
+          const needed = Math.max(1, 3 - item.qty);
+          totalToOrder += needed;
           const tr = document.createElement('tr');
-          tr.className = i.qty === 0 ? "bg-rose-50/50" : "";
+          tr.className = item.qty === 0 ? "bg-[#fce8e6]/30" : "";
           tr.innerHTML = `
-            <td class="px-4 py-2 font-medium text-slate-700">${i.line === 'Redken Shades EQ' ? 'Redken' : 'Paul Mitchell'}</td>
-            <td class="px-4 py-2 text-slate-600">${i.family}</td>
-            <td class="px-4 py-2 font-semibold text-slate-900">${i.shade}</td>
-            <td class="px-4 py-2 text-center font-bold ${i.qty === 0 ? 'text-rose-600' : 'text-amber-600'}">${i.qty}</td>
-            <td class="px-4 py-2 text-right font-bold text-indigo-600">+${toOrder}</td>
+            <td class="p-2 text-[#5f6368]">${item.line}</td>
+            <td class="p-2 text-[#3c4043]">${item.family}</td>
+            <td class="p-2 font-medium text-[#202124]">${item.shade}</td>
+            <td class="p-2 text-center font-mono ${item.qty === 0 ? 'text-[#c5221f] font-bold' : 'text-[#7f6000]'}">${item.qty}</td>
+            <td class="p-2 text-right font-mono font-bold text-[#137333]">+${needed}</td>
           `;
           tbody.appendChild(tr);
         });
       }
 
+      document.getElementById('totalItemsToOrderText').innerText = `Total units to order: ${totalToOrder} bottles`;
       modal.classList.remove('hidden');
       modal.classList.add('flex');
     }
@@ -613,32 +804,67 @@
       modal.classList.remove('flex');
     }
 
+    function toggleSheetPickerMenu() {
+      const modal = document.getElementById('allSheetsModal');
+      const list = document.getElementById('allSheetsList');
+      list.innerHTML = '';
+
+      workbookSheets.forEach(sheet => {
+        const btn = document.createElement('button');
+        btn.className = `w-full text-left px-2.5 py-1.5 rounded hover:bg-[#f1f3f4] flex items-center justify-between ${sheet === currentActiveSheet ? 'bg-[#e6f4ea] text-[#137333] font-semibold' : 'text-[#3c4043]'}`;
+        btn.innerHTML = `
+          <span>${sheet}</span>
+          <span class="text-[10px] text-[#80868b]">${sheet === 'Master Inventory' ? '115 items' : 'Tab'}</span>
+        `;
+        btn.onclick = () => {
+          setActiveSheet(sheet);
+          toggleSheetPickerMenu();
+        };
+        list.appendChild(btn);
+      });
+
+      modal.classList.toggle('hidden');
+      modal.classList.toggle('flex');
+    }
+
     function downloadRestockCSV() {
-      const needed = inventory.filter(i => i.qty < 2);
+      const needed = inventoryState.filter(i => i.qty < 2);
       if (needed.length === 0) {
-        alert("Stock levels are full! No replenishment items required.");
+        showToast("No reorders needed. Inventory is fully stocked!");
         return;
       }
 
-      let csv = "Product Line,Family,Shade,Current Qty,Suggested Order Qty\n";
+      let csv = "Color Family,Shade,Current Quantity,Suggested Order Qty,Product Line\n";
       needed.forEach(i => {
         const orderQty = Math.max(1, 3 - i.qty);
-        csv += `"${i.line}","${i.family}","${i.shade}",${i.qty},${orderQty}\n`;
+        csv += `"${i.family}","${i.shade}",${i.qty},${orderQty},"${i.line}"\n`;
       });
 
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Salon_Color_Restock_Order_${new Date().toISOString().slice(0, 10)}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `HairSalon_Restock_Order_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast("Downloaded reorder order CSV.");
     }
 
-    // Initialize application
-    renderCategoryPills();
-    renderView();
+    function showToast(msg) {
+      const toast = document.getElementById('toastNotification');
+      toast.innerText = msg;
+      toast.classList.remove('opacity-0');
+      toast.classList.add('opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0');
+      }, 2200);
+    }
+
+    // Initialize application on load
+    renderSheetTabs();
+    renderSheetGrid();
   </script>
 </body>
 </html>
