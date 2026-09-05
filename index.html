@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Salon Inventory System 2.0 | Redken Shades EQ & Paul Mitchell The Demi</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
+
+  <!-- Top Navigation Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold shadow-sm shadow-indigo-200">
+          ✂
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-bold text-slate-900 tracking-tight">Studio Inventory 2.0</h1>
+            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">Dual-Line</span>
+          </div>
+          <p class="text-xs text-slate-500">Redken Shades EQ &bull; Paul Mitchell The Demi</p>
+        </div>
+      </div>
+
+      <!-- Quick Action Controls -->
+      <div class="flex flex-wrap items-center gap-2.5">
+        <div class="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs font-medium">
+          <button id="tabMaster" onclick="switchMainTab('master')" class="px-3 py-1.5 rounded-md transition bg-white text-slate-900 shadow-xs">
+            Master View
+          </button>
+          <button id="tabCategory" onclick="switchMainTab('category')" class="px-3 py-1.5 rounded-md transition text-slate-600 hover:text-slate-900">
+            Category Tabs
+          </button>
+        </div>
+        <button onclick="openRestockModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-rose-200 text-xs font-semibold rounded-lg text-rose-700 bg-rose-50 hover:bg-rose-100 transition shadow-xs">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+          Restock List (<span id="restockBadge">0</span>)
+        </button>
+        <button onclick="resetToDefaults()" title="Reset data to spreadsheet defaults" class="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg border border-transparent hover:border-slate-200 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full space-y-6 flex-1">
+
+    <!-- Overview Counters -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+      <div class="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs">
+        <span class="text-xs font-medium text-slate-500">Total Formula Items</span>
+        <div class="flex items-baseline justify-between mt-1">
+          <span id="metricTotal" class="text-2xl font-bold text-slate-900">0</span>
+          <span class="text-[11px] text-slate-400 font-medium">SKUs</span>
+        </div>
+      </div>
+      <div class="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs">
+        <span class="text-xs font-medium text-emerald-600">Well Stocked (2+)</span>
+        <div class="flex items-baseline justify-between mt-1">
+          <span id="metricInStock" class="text-2xl font-bold text-emerald-600">0</span>
+          <span id="pctInStock" class="text-[11px] text-emerald-600/75 font-medium">0%</span>
+        </div>
+      </div>
+      <div class="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs">
+        <span class="text-xs font-medium text-amber-600">Low Stock (1 left)</span>
+        <div class="flex items-baseline justify-between mt-1">
+          <span id="metricLowStock" class="text-2xl font-bold text-amber-600">0</span>
+          <span class="text-[11px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded font-medium">Urgent</span>
+        </div>
+      </div>
+      <div class="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs">
+        <span class="text-xs font-medium text-rose-600">Out of Stock (0)</span>
+        <div class="flex items-baseline justify-between mt-1">
+          <span id="metricOutOfStock" class="text-2xl font-bold text-rose-600">0</span>
+          <span class="text-[11px] text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded font-medium">Critical</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sub-Line Tabs / Filter Header -->
+    <div class="space-y-3">
+      <!-- Line Selector (Redken vs Paul Mitchell vs All) -->
+      <div class="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto custom-scrollbar">
+        <button onclick="setProductLine('ALL')" id="lineBtnALL" class="line-toggle-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-900 text-white">
+          All Products
+        </button>
+        <button onclick="setProductLine('Redken Shades EQ')" id="lineBtnRedken" class="line-toggle-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">
+          Redken Shades EQ
+        </button>
+        <button onclick="setProductLine('Paul Mitchell The Demi')" id="lineBtnPM" class="line-toggle-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">
+          Paul Mitchell The Demi
+        </button>
+      </div>
+
+      <!-- Category Filter Pills (When in Category view or Master view) -->
+      <div id="categoryTabsContainer" class="flex items-center gap-1.5 overflow-x-auto pb-1.5 custom-scrollbar text-xs">
+        <!-- Dynamically filled with pills matching spreadsheet tabs -->
+      </div>
+    </div>
+
+    <!-- Search & Quick Filters -->
+    <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center gap-3 justify-between">
+      <div class="relative w-full sm:w-80">
+        <input 
+          type="text" 
+          id="searchInput" 
+          oninput="renderView()" 
+          placeholder="Search by shade code or name (e.g. 09T, Opal, 10BV)..." 
+          class="w-full pl-9 pr-3 py-2 text-xs md:text-sm border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+        />
+        <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      </div>
+
+      <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+        <label class="text-xs text-slate-500 font-medium">Status:</label>
+        <select id="statusFilter" onchange="renderView()" class="border border-slate-200 text-xs rounded-lg px-2.5 py-2 bg-slate-50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="ALL">All Statuses</option>
+          <option value="In Stock">In Stock (≥2)</option>
+          <option value="Low Stock">Low Stock (1)</option>
+          <option value="Out of Stock">Out of Stock (0)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- View Content (Master Table vs Category Cards) -->
+    <div id="masterViewSection" class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+      <div class="overflow-x-auto custom-scrollbar">
+        <table class="min-w-full divide-y divide-slate-200 text-left text-xs md:text-sm">
+          <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] md:text-[11px] font-semibold tracking-wider">
+            <tr>
+              <th scope="col" class="px-5 py-3">Product Line</th>
+              <th scope="col" class="px-5 py-3">Family / Series</th>
+              <th scope="col" class="px-5 py-3">Shade Description</th>
+              <th scope="col" class="px-5 py-3 text-center">Stock Level</th>
+              <th scope="col" class="px-5 py-3">Status</th>
+              <th scope="col" class="px-5 py-3 text-right">Adjust Count</th>
+            </tr>
+          </thead>
+          <tbody id="inventoryTableBody" class="divide-y divide-slate-100">
+            <!-- Dynamic rows populated via JS -->
+          </tbody>
+        </table>
+      </div>
+      <div id="noResultsMaster" class="hidden py-12 text-center text-sm text-slate-500">
+        No formula shades match your current query or filter selections.
+      </div>
+    </div>
+
+    <!-- Category Group View (Matches Spreadsheet Sub-Tabs) -->
+    <div id="categoryViewSection" class="hidden space-y-6">
+      <div id="categoryCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Dynamic grouped cards populated via JS -->
+      </div>
+      <div id="noResultsCategory" class="hidden py-12 text-center text-sm text-slate-500 bg-white border border-slate-200 rounded-xl">
+        No families match your active filter.
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Restock & Order Modal -->
+  <div id="restockModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+        <div>
+          <h3 class="text-base font-bold text-slate-900">Restock Replenishment Sheet</h3>
+          <p class="text-xs text-slate-500">Auto-calculated restock to target par level (Default: 3 units each)</p>
+        </div>
+        <button onclick="closeRestockModal()" class="text-slate-400 hover:text-slate-600 text-lg leading-none">&times;</button>
+      </div>
+
+      <div class="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-4">
+        <div class="flex items-center justify-between text-xs bg-slate-50 p-3 rounded-lg border border-slate-200">
+          <div>
+            <span class="font-semibold text-slate-700">Target Par Stock:</span>
+            <span class="text-slate-500"> 3 bottles per shade</span>
+          </div>
+          <button onclick="downloadRestockCSV()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-md shadow-xs transition flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download CSV Order
+          </button>
+        </div>
+
+        <div class="border border-slate-200 rounded-lg overflow-hidden">
+          <table class="min-w-full divide-y divide-slate-200 text-left text-xs">
+            <thead class="bg-slate-50 text-slate-600 font-semibold uppercase text-[10px]">
+              <tr>
+                <th class="px-4 py-2.5">Line</th>
+                <th class="px-4 py-2.5">Family</th>
+                <th class="px-4 py-2.5">Shade</th>
+                <th class="px-4 py-2.5 text-center">Current</th>
+                <th class="px-4 py-2.5 text-right">Order Needed</th>
+              </tr>
+            </thead>
+            <tbody id="restockTableBody" class="divide-y divide-slate-100">
+              <!-- Dynamically inserted -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex justify-end">
+        <button onclick="closeRestockModal()" class="px-4 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 transition">
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Raw Master Data directly reflected from the provided spreadsheet
+    const defaultData = [
+      // Redken Shades EQ Family
+      { line: "Redken Shades EQ", family: "Titanium", shade: "09T Chrome", qty: 0 },
+      { line: "Redken Shades EQ", family: "Titanium", shade: "08T Silver", qty: 2 },
+      { line: "Redken Shades EQ", family: "Titanium", shade: "07T Steel", qty: 3 },
+      { line: "Redken Shades EQ", family: "Titanium", shade: "06T Iron", qty: 4 },
+      { line: "Redken Shades EQ", family: "Green Natural", shade: "08GN Ivy", qty: 3 },
+      { line: "Redken Shades EQ", family: "Green Natural", shade: "06GN Moss", qty: 3 },
+      { line: "Redken Shades EQ", family: "Blue", shade: "09B Sterling", qty: 1 },
+      { line: "Redken Shades EQ", family: "Blue", shade: "01B Onyx", qty: 0 },
+      { line: "Redken Shades EQ", family: "Violet Blue", shade: "08VB Violet Frost", qty: 3 },
+      { line: "Redken Shades EQ", family: "Violet Blue", shade: "07VB Violet Star", qty: 3 },
+      { line: "Redken Shades EQ", family: "Violet Blue", shade: "06VB Violet Lagoon", qty: 4 },
+      { line: "Redken Shades EQ", family: "Pearl", shade: "09P Opal Glow", qty: 0 },
+      { line: "Redken Shades EQ", family: "Pearl", shade: "07P Mother Of Pearl", qty: 2 },
+      { line: "Redken Shades EQ", family: "Natural Ash", shade: "09NA Mist", qty: 1 },
+      { line: "Redken Shades EQ", family: "Natural Ash", shade: "08NA Volcanic", qty: 0 },
+      { line: "Redken Shades EQ", family: "Natural Ash", shade: "07NA Pewter", qty: 3 },
+      { line: "Redken Shades EQ", family: "Natural Ash", shade: "06NA Granite", qty: 2 },
+      { line: "Redken Shades EQ", family: "Natural Ash", shade: "05NA Smoke", qty: 1 },
+      { line: "Redken Shades EQ", family: "Natural Ash", shade: "04NA Storm Cloud", qty: 1 },
+      { line: "Redken Shades EQ", family: "Matte", shade: "09M Sand Dunes", qty: 2 },
+      { line: "Redken Shades EQ", family: "Matte", shade: "07M Driftwood", qty: 2 },
+      { line: "Redken Shades EQ", family: "Matte", shade: "04M Smoked Ceder", qty: 1 },
+      { line: "Redken Shades EQ", family: "Matte", shade: "02M Midnight Ash", qty: 1 },
+      { line: "Redken Shades EQ", family: "Natural", shade: "010N Delicate Natural", qty: 1 },
+      { line: "Redken Shades EQ", family: "Natural", shade: "09N Cafe Au Lait", qty: 1 },
+      { line: "Redken Shades EQ", family: "Natural", shade: "08N Mojave", qty: 0 },
+      { line: "Redken Shades EQ", family: "Natural", shade: "07N Mirage", qty: 3 },
+      { line: "Redken Shades EQ", family: "Natural", shade: "06N Moroccan Sand", qty: 2 },
+      { line: "Redken Shades EQ", family: "Natural", shade: "05N Walnut", qty: 0 },
+      { line: "Redken Shades EQ", family: "Natural", shade: "04N Chicory", qty: 2 },
+      { line: "Redken Shades EQ", family: "Natural", shade: "03N Expresso", qty: 1 },
+      { line: "Redken Shades EQ", family: "Natural Beige", shade: "09NB Irish Creme", qty: 1 },
+      { line: "Redken Shades EQ", family: "Natural Beige", shade: "07NB Chestnut", qty: 0 },
+      { line: "Redken Shades EQ", family: "Natural Beige", shade: "06NB Brandy", qty: 4 },
+      { line: "Redken Shades EQ", family: "Natural Beige", shade: "04NB Maple", qty: 1 },
+      { line: "Redken Shades EQ", family: "Natural Beige", shade: "03NB Mocha Java", qty: 0 },
+      { line: "Redken Shades EQ", family: "Natural Warm", shade: "09NW Cream Soda", qty: 1 },
+      { line: "Redken Shades EQ", family: "Natural Warm", shade: "07NW Milk Tea", qty: 0 },
+      { line: "Redken Shades EQ", family: "Natural Warm", shade: "05NW Macchiato", qty: 2 },
+      { line: "Redken Shades EQ", family: "Natural Warm", shade: "03NW Cocoa Bean", qty: 0 },
+      { line: "Redken Shades EQ", family: "Gold Iridescent", shade: "09GI Hamptons", qty: 1 },
+      { line: "Redken Shades EQ", family: "Gold Iridescent", shade: "08GI St Barths", qty: 0 },
+      { line: "Redken Shades EQ", family: "Gold Iridescent", shade: "06GI Tenerife", qty: 2 },
+      { line: "Redken Shades EQ", family: "Gold Beige", shade: "09GB Butter Cream", qty: 0 },
+      { line: "Redken Shades EQ", family: "Gold Beige", shade: "07GB Butterscotch", qty: 1 },
+      { line: "Redken Shades EQ", family: "Gold Beige", shade: "06GB Toffee", qty: 4 },
+      { line: "Redken Shades EQ", family: "Gold", shade: "09G Vanilla Creme", qty: 0 },
+      { line: "Redken Shades EQ", family: "Gold", shade: "07G Saffron", qty: 4 },
+      { line: "Redken Shades EQ", family: "Gold", shade: "06G St.Tropez", qty: 3 },
+      { line: "Redken Shades EQ", family: "Gold", shade: "05G Caramel", qty: 2 },
+      { line: "Redken Shades EQ", family: "Gold", shade: "03G Cinnamon", qty: 3 },
+      { line: "Redken Shades EQ", family: "Gold Gold", shade: "08GG Gold Dip", qty: 2 },
+      { line: "Redken Shades EQ", family: "Gold Gold", shade: "06GG Midas Touch", qty: 3 },
+      { line: "Redken Shades EQ", family: "Warm Gold", shade: "08WG Golden Apricot", qty: 1 },
+      { line: "Redken Shades EQ", family: "Warm Gold", shade: "06WG Mango", qty: 3 },
+      { line: "Redken Shades EQ", family: "Warm Gold", shade: "04WG Sun Tea", qty: 5 },
+      { line: "Redken Shades EQ", family: "Copper", shade: "08C Cayenne", qty: 2 },
+      { line: "Redken Shades EQ", family: "Copper", shade: "07C Curry", qty: 1 },
+      { line: "Redken Shades EQ", family: "Copper", shade: "05C Chili", qty: 1 },
+      { line: "Redken Shades EQ", family: "Auburn/Auburn Accent", shade: "09AA Papaya", qty: 3 },
+      { line: "Redken Shades EQ", family: "Auburn/Auburn Accent", shade: "06AA Bonfire", qty: 1 },
+      { line: "Redken Shades EQ", family: "Auburn/Auburn Accent", shade: "03A Terra Cotta", qty: 0 },
+      { line: "Redken Shades EQ", family: "Copper Brown", shade: "07CB Spicestone", qty: 1 },
+      { line: "Redken Shades EQ", family: "Copper Brown", shade: "06CB Amber Glaze", qty: 3 },
+      { line: "Redken Shades EQ", family: "Copper Brown", shade: "05CB Brownstone", qty: 1 },
+      { line: "Redken Shades EQ", family: "Copper Brown", shade: "04CB Clove", qty: 0 },
+      { line: "Redken Shades EQ", family: "Red Brown", shade: "09RB Blush", qty: 2 },
+      { line: "Redken Shades EQ", family: "Red Brown", shade: "06RB Cherry Cola", qty: 3 },
+      { line: "Redken Shades EQ", family: "Red Brown", shade: "05RB Manzanita", qty: 0 },
+      { line: "Redken Shades EQ", family: "Red Brown", shade: "03RB Mahogany", qty: 0 },
+      { line: "Redken Shades EQ", family: "Copper Copper", shade: "07CC Urban Fever", qty: 2 },
+      { line: "Redken Shades EQ", family: "Copper Copper", shade: "05CC Electric Shock", qty: 1 },
+      { line: "Redken Shades EQ", family: "Copper Red", shade: "08CR Sunrise", qty: 0 },
+      { line: "Redken Shades EQ", family: "Copper Red", shade: "06CR Sunset", qty: 3 },
+      { line: "Redken Shades EQ", family: "Red", shade: "06R Rocket Fire", qty: 1 },
+      { line: "Redken Shades EQ", family: "Red", shade: "03R Royal Red", qty: 1 },
+      { line: "Redken Shades EQ", family: "Red Red", shade: "07RR Flame", qty: 0 },
+      { line: "Redken Shades EQ", family: "Red Red", shade: "06RR Blaze", qty: 0 },
+      { line: "Redken Shades EQ", family: "Red Violet", shade: "05RV Sangria", qty: 0 },
+      { line: "Redken Shades EQ", family: "Red Violet", shade: "04RV Cabernet", qty: 2 },
+      { line: "Redken Shades EQ", family: "Red Violet", shade: "03RV Merlot", qty: 1 },
+      { line: "Redken Shades EQ", family: "Violet Rose", shade: "09VRo Rose", qty: 2 },
+      { line: "Redken Shades EQ", family: "Violet Rose", shade: "08VRo Rose Quartz", qty: 0 },
+      { line: "Redken Shades EQ", family: "Violet Rose", shade: "06VRo Mauve Rose", qty: 0 },
+      { line: "Redken Shades EQ", family: "Violet Rose", shade: "04VRo Violet Rose", qty: 0 },
+      { line: "Redken Shades EQ", family: "Pastels", shade: "Silver Green", qty: 0 },
+      { line: "Redken Shades EQ", family: "Pastels", shade: "Peach", qty: 0 },
+      { line: "Redken Shades EQ", family: "Pastels", shade: "Pink", qty: 3 },
+      { line: "Redken Shades EQ", family: "Pastels", shade: "Aqua Blue", qty: 0 },
+      { line: "Redken Shades EQ", family: "Violet", shade: "09V Platinum Ice", qty: 0 },
+      { line: "Redken Shades EQ", family: "Violet", shade: "08V Iridescent Quartz", qty: 2 },
+      { line: "Redken Shades EQ", family: "Violet", shade: "07V Crushed Amethyst", qty: 6 },
+      { line: "Redken Shades EQ", family: "Violet", shade: "05V Cosmic Violet", qty: 0 },
+      { line: "Redken Shades EQ", family: "Violet", shade: "03V Orchid", qty: 1 },
+      { line: "Redken Shades EQ", family: "Violet Violet", shade: "010VV Lavender Ice", qty: 1 },
+      { line: "Redken Shades EQ", family: "Kicker", shade: "Violet Kicker", qty: 1 },
+      { line: "Redken Shades EQ", family: "Kicker", shade: "Red Kicker", qty: 0 },
+      { line: "Redken Shades EQ", family: "Kicker", shade: "Orange Kicker", qty: 0 },
+      { line: "Redken Shades EQ", family: "Kicker", shade: "Yellow Kicker", qty: 1 },
+      { line: "Redken Shades EQ", family: "Ash Gold", shade: "07AG Smokey Beige", qty: 1 },
+      { line: "Redken Shades EQ", family: "Natural Chocolate", shade: "07NCh Fondue", qty: 1 },
+      { line: "Redken Shades EQ", family: "Ash Brown Neutral", shade: "04ABn Dark Roast", qty: 1 },
+      { line: "Redken Shades EQ", family: "Ash Brown Neutral", shade: "02ABn Cool Ebony", qty: 3 },
+      { line: "Redken Shades EQ", family: "Violet Gold", shade: "010VG Baby", qty: 1 },
+      { line: "Redken Shades EQ", family: "Natural Beige", shade: "010NB Caramel Cloud", qty: 1 },
+
+      // Paul Mitchell The Demi Line
+      { line: "Paul Mitchell The Demi", family: "Natural", shade: "10N Natural", qty: 2 },
+      { line: "Paul Mitchell The Demi", family: "Natural Beige", shade: "10NB Natural Beige", qty: 2 },
+      { line: "Paul Mitchell The Demi", family: "Blue Violet", shade: "10BV Blue Violet", qty: 1 },
+      { line: "Paul Mitchell The Demi", family: "Gold Violet", shade: "10Gv Gold Violet", qty: 6 },
+      { line: "Paul Mitchell The Demi", family: "Natural", shade: "3N Natural", qty: 1 },
+      { line: "Paul Mitchell The Demi", family: "Chocolate", shade: "4CH Chocolate", qty: 1 },
+      { line: "Paul Mitchell The Demi", family: "Natural", shade: "4N Natural", qty: 2 },
+      { line: "Paul Mitchell The Demi", family: "Natural Beige", shade: "4NB Natural Beige", qty: 1 },
+      { line: "Paul Mitchell The Demi", family: "Natural Beige", shade: "5NB Natural Beige", qty: 2 },
+      { line: "Paul Mitchell The Demi", family: "Chocolate", shade: "6CH Chocolate", qty: 2 },
+      { line: "Paul Mitchell The Demi", family: "Gold Violet", shade: "6Gv Gold Violet", qty: 6 },
+      { line: "Paul Mitchell The Demi", family: "Natural Beige", shade: "6NB Dark Natural Beige", qty: 1 },
+      { line: "Paul Mitchell The Demi", family: "Red", shade: "6R Red", qty: 1 },
+      { line: "Paul Mitchell The Demi", family: "Gold Beige", shade: "7Gb Gold Beige", qty: 1 },
+      { line: "Paul Mitchell The Demi", family: "Natural Beige", shade: "7NB Natural Beige", qty: 2 },
+      { line: "Paul Mitchell The Demi", family: "Natural Copper", shade: "7NC Natural Copper", qty: 1 },
+      { line: "Paul Mitchell The Demi", family: "Blue Violet", shade: "8BV Blue Violet", qty: 1 },
+      { line: "Paul Mitchell The Demi", family: "Chocolate", shade: "8CH Light Chocolate Blonde", qty: 1 },
+      { line: "Paul Mitchell The Demi", family: "Gold Violet", shade: "8Gv Gold Violet", qty: 6 },
+      { line: "Paul Mitchell The Demi", family: "Natural", shade: "8N Natural", qty: 1 },
+      { line: "Paul Mitchell The Demi", family: "Gold", shade: "9G Gold", qty: 2 },
+      { line: "Paul Mitchell The Demi", family: "Gold Beige", shade: "9Gb Gold Beige", qty: 1 },
+      { line: "Paul Mitchell The Demi", family: "Matte Tone", shade: "9MT Light Blonde Matte Tone", qty: 1 },
+      { line: "Paul Mitchell The Demi", family: "Natural", shade: "9N Natural", qty: 2 },
+      { line: "Paul Mitchell The Demi", family: "Natural Beige", shade: "9NB Natural Beige", qty: 1 },
+      { line: "Paul Mitchell The Demi", family: "Pearl", shade: "9P Pearl", qty: 2 }
+    ];
+
+    let inventory = JSON.parse(localStorage.getItem('salon_inventory_data_v2')) || defaultData;
+    let currentLine = 'ALL';
+    let currentFamily = 'ALL';
+    let currentMainTab = 'master'; // 'master' or 'category'
+
+    function saveState() {
+      localStorage.setItem('salon_inventory_data_v2', JSON.stringify(inventory));
+      renderView();
+    }
+
+    function resetToDefaults() {
+      if (confirm("Reset inventory to the spreadsheet's original quantities?")) {
+        inventory = JSON.parse(JSON.stringify(defaultData));
+        saveState();
+      }
+    }
+
+    function getStockStatus(qty) {
+      if (qty <= 0) return { label: "Out of Stock", badge: "bg-rose-50 text-rose-700 border-rose-200" };
+      if (qty === 1) return { label: "Low Stock", badge: "bg-amber-50 text-amber-700 border-amber-200" };
+      return { label: "In Stock", badge: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+    }
+
+    function updateStock(index, delta) {
+      inventory[index].qty = Math.max(0, inventory[index].qty + delta);
+      saveState();
+    }
+
+    function setProductLine(line) {
+      currentLine = line;
+      currentFamily = 'ALL';
+      
+      document.querySelectorAll('.line-toggle-btn').forEach(btn => {
+        btn.className = 'line-toggle-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition';
+      });
+
+      if (line === 'ALL') {
+        document.getElementById('lineBtnALL').className = 'line-toggle-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-900 text-white shadow-xs';
+      } else if (line === 'Redken Shades EQ') {
+        document.getElementById('lineBtnRedken').className = 'line-toggle-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white shadow-xs';
+      } else if (line === 'Paul Mitchell The Demi') {
+        document.getElementById('lineBtnPM').className = 'line-toggle-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-violet-600 text-white shadow-xs';
+      }
+
+      renderCategoryPills();
+      renderView();
+    }
+
+    function switchMainTab(tab) {
+      currentMainTab = tab;
+      const masterBtn = document.getElementById('tabMaster');
+      const catBtn = document.getElementById('tabCategory');
+      const masterView = document.getElementById('masterViewSection');
+      const catView = document.getElementById('categoryViewSection');
+
+      if (tab === 'master') {
+        masterBtn.className = "px-3 py-1.5 rounded-md transition bg-white text-slate-900 shadow-xs font-semibold";
+        catBtn.className = "px-3 py-1.5 rounded-md transition text-slate-600 hover:text-slate-900";
+        masterView.classList.remove('hidden');
+        catView.classList.add('hidden');
+      } else {
+        catBtn.className = "px-3 py-1.5 rounded-md transition bg-white text-slate-900 shadow-xs font-semibold";
+        masterBtn.className = "px-3 py-1.5 rounded-md transition text-slate-600 hover:text-slate-900";
+        catView.classList.remove('hidden');
+        masterView.classList.add('hidden');
+      }
+      renderView();
+    }
+
+    function renderCategoryPills() {
+      const container = document.getElementById('categoryTabsContainer');
+      container.innerHTML = '';
+
+      let availableFamilies = inventory
+        .filter(item => currentLine === 'ALL' || item.line === currentLine)
+        .map(item => item.family);
+      
+      const uniqueFamilies = ['ALL', ...new Set(availableFamilies)].sort();
+
+      uniqueFamilies.forEach(fam => {
+        const btn = document.createElement('button');
+        const isActive = fam === currentFamily;
+        btn.className = `px-2.5 py-1 rounded-full whitespace-nowrap font-medium transition ${
+          isActive 
+            ? 'bg-slate-900 text-white shadow-xs' 
+            : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+        }`;
+        btn.textContent = fam === 'ALL' ? 'All Families' : fam;
+        btn.onclick = () => {
+          currentFamily = fam;
+          renderCategoryPills();
+          renderView();
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    function renderView() {
+      const search = document.getElementById('searchInput').value.trim().toLowerCase();
+      const status = document.getElementById('statusFilter').value;
+
+      // Update Top Metrics
+      const total = inventory.length;
+      const inStock = inventory.filter(i => i.qty >= 2).length;
+      const lowStock = inventory.filter(i => i.qty === 1).length;
+      const outStock = inventory.filter(i => i.qty === 0).length;
+
+      document.getElementById('metricTotal').innerText = total;
+      document.getElementById('metricInStock').innerText = inStock;
+      document.getElementById('pctInStock').innerText = `${Math.round((inStock / total) * 100)}%`;
+      document.getElementById('metricLowStock').innerText = lowStock;
+      document.getElementById('metricOutOfStock').innerText = outStock;
+      document.getElementById('restockBadge').innerText = lowStock + outStock;
+
+      // Filter Data
+      const filtered = inventory.map((item, idx) => ({ ...item, originalIndex: idx })).filter(item => {
+        const matchLine = currentLine === 'ALL' || item.line === currentLine;
+        const matchFamily = currentFamily === 'ALL' || item.family === currentFamily;
+        const statusObj = getStockStatus(item.qty);
+        const matchStatus = status === 'ALL' || statusObj.label === status;
+        const matchSearch = item.shade.toLowerCase().includes(search) || 
+                            item.family.toLowerCase().includes(search) ||
+                            item.line.toLowerCase().includes(search);
+        return matchLine && matchFamily && matchStatus && matchSearch;
+      });
+
+      // Render Master Table
+      const tbody = document.getElementById('inventoryTableBody');
+      tbody.innerHTML = '';
+      
+      filtered.forEach(item => {
+        const statusObj = getStockStatus(item.qty);
+        const isRedken = item.line === "Redken Shades EQ";
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/70 transition";
+        tr.innerHTML = `
+          <td class="px-5 py-3.5 whitespace-nowrap">
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium ${isRedken ? 'bg-indigo-50 text-indigo-700' : 'bg-violet-50 text-violet-700'}">
+              ${isRedken ? 'Redken Shades EQ' : 'Paul Mitchell The Demi'}
+            </span>
+          </td>
+          <td class="px-5 py-3.5 font-medium text-slate-800 whitespace-nowrap">${item.family}</td>
+          <td class="px-5 py-3.5 font-semibold text-slate-900">${item.shade}</td>
+          <td class="px-5 py-3.5 text-center">
+            <span class="text-sm font-bold ${item.qty === 0 ? 'text-rose-600' : item.qty === 1 ? 'text-amber-600' : 'text-slate-800'}">
+              ${item.qty}
+            </span>
+          </td>
+          <td class="px-5 py-3.5 whitespace-nowrap">
+            <span class="inline-flex items-center border text-[11px] font-medium px-2 py-0.5 rounded-full ${statusObj.badge}">
+              ${statusObj.label}
+            </span>
+          </td>
+          <td class="px-5 py-3.5 text-right whitespace-nowrap">
+            <div class="inline-flex rounded-lg border border-slate-200 bg-white shadow-xs overflow-hidden">
+              <button onclick="updateStock(${item.originalIndex}, -1)" class="px-2.5 py-1 text-slate-500 hover:text-slate-900 hover:bg-slate-100 font-bold border-r border-slate-200 transition">-</button>
+              <button onclick="updateStock(${item.originalIndex}, 1)" class="px-2.5 py-1 text-slate-500 hover:text-slate-900 hover:bg-slate-100 font-bold transition">+</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('noResultsMaster').classList.toggle('hidden', filtered.length > 0);
+
+      // Render Category Card Groups (matches spreadsheet category tabs)
+      const cardsGrid = document.getElementById('categoryCardsGrid');
+      cardsGrid.innerHTML = '';
+
+      // Group filtered by family
+      const groupedByFamily = filtered.reduce((acc, item) => {
+        if (!acc[item.family]) acc[item.family] = [];
+        acc[item.family].push(item);
+        return acc;
+      }, {});
+
+      const familyKeys = Object.keys(groupedByFamily).sort();
+      familyKeys.forEach(family => {
+        const items = groupedByFamily[family];
+        const card = document.createElement('div');
+        card.className = "bg-white border border-slate-200 rounded-xl p-4 shadow-xs flex flex-col justify-between";
+        
+        let itemsHtml = items.map(i => {
+          const s = getStockStatus(i.qty);
+          return `
+            <div class="flex items-center justify-between py-2 border-b border-slate-100 last:border-0 text-xs">
+              <div class="truncate pr-2">
+                <span class="font-semibold text-slate-800">${i.shade}</span>
+                <span class="block text-[10px] text-slate-400">${i.line}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-xs ${i.qty === 0 ? 'text-rose-600' : 'text-slate-700'}">${i.qty}</span>
+                <div class="inline-flex rounded border border-slate-200 text-xs">
+                  <button onclick="updateStock(${i.originalIndex}, -1)" class="px-1.5 py-0.5 hover:bg-slate-100 font-bold border-r border-slate-200">-</button>
+                  <button onclick="updateStock(${i.originalIndex}, 1)" class="px-1.5 py-0.5 hover:bg-slate-100 font-bold">+</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
+              <h4 class="font-bold text-slate-900 text-sm">${family}</h4>
+              <span class="text-[11px] px-2 py-0.5 bg-slate-100 rounded text-slate-500 font-medium">${items.length} shades</span>
+            </div>
+            <div class="divide-y divide-slate-50">
+              ${itemsHtml}
+            </div>
+          </div>
+        `;
+        cardsGrid.appendChild(card);
+      });
+
+      document.getElementById('noResultsCategory').classList.toggle('hidden', familyKeys.length > 0);
+    }
+
+    // Modal & Restock Functions
+    function openRestockModal() {
+      const modal = document.getElementById('restockModal');
+      const tbody = document.getElementById('restockTableBody');
+      tbody.innerHTML = '';
+
+      const needed = inventory.filter(i => i.qty < 2);
+
+      if (needed.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400">Everything is well-stocked (minimum 2+ on hand)!</td></tr>`;
+      } else {
+        needed.forEach(i => {
+          const toOrder = Math.max(1, 3 - i.qty);
+          const tr = document.createElement('tr');
+          tr.className = i.qty === 0 ? "bg-rose-50/50" : "";
+          tr.innerHTML = `
+            <td class="px-4 py-2 font-medium text-slate-700">${i.line === 'Redken Shades EQ' ? 'Redken' : 'Paul Mitchell'}</td>
+            <td class="px-4 py-2 text-slate-600">${i.family}</td>
+            <td class="px-4 py-2 font-semibold text-slate-900">${i.shade}</td>
+            <td class="px-4 py-2 text-center font-bold ${i.qty === 0 ? 'text-rose-600' : 'text-amber-600'}">${i.qty}</td>
+            <td class="px-4 py-2 text-right font-bold text-indigo-600">+${toOrder}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeRestockModal() {
+      const modal = document.getElementById('restockModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function downloadRestockCSV() {
+      const needed = inventory.filter(i => i.qty < 2);
+      if (needed.length === 0) {
+        alert("Stock levels are full! No replenishment items required.");
+        return;
+      }
+
+      let csv = "Product Line,Family,Shade,Current Qty,Suggested Order Qty\n";
+      needed.forEach(i => {
+        const orderQty = Math.max(1, 3 - i.qty);
+        csv += `"${i.line}","${i.family}","${i.shade}",${i.qty},${orderQty}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Salon_Color_Restock_Order_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    // Initialize application
+    renderCategoryPills();
+    renderView();
+  </script>
+</body>
+</html>
