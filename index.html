@@ -11,6 +11,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 
+  <!-- jsPDF & AutoTable for direct PDF Generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -598,12 +602,12 @@
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <!-- Export CSV -->
-          <button id="btn-export-csv" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-salon-800 hover:bg-salon-700 text-slate-200 border border-white/10 flex items-center gap-1.5 transition-all">
+          <!-- Export PDF Button -->
+          <button id="btn-export-pdf" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-950/40 flex items-center gap-1.5 transition-all active:scale-95">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
             </svg>
-            Export CSV
+            Export PDF
           </button>
           <button id="btn-close-master-sheet" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2226,30 +2230,172 @@
       }, 2500);
     }
 
-    function exportMasterCSV() {
+    function exportMasterPDF() {
       const flat = getFlattenedShades();
-      const headers = ['Color Family', 'Brand', 'Shade', 'Quantity', 'Status'];
       
-      const rows = flat.map(s => {
-        const status = getStockStatus(s.qty, s.min).label;
-        return [
-          `"${s.familyName}"`,
-          `"${s.brand}"`,
-          `"${s.fullName}"`,
-          s.qty,
-          `"${status}"`
-        ].join(',');
-      });
+      showToast('Generating Master Inventory PDF...', 'info');
 
-      const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows].join('\n');
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement('a');
-      link.setAttribute('href', encodedUri);
-      link.setAttribute('download', `Redken_Shades_EQ_Master_Inventory_${new Date().toISOString().slice(0, 10)}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      showToast('Exported Master Inventory sheet CSV', 'info');
+      try {
+        if (window.jspdf && window.jspdf.jsPDF) {
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF({
+            orientation: 'landscape',
+            unit: 'pt',
+            format: 'letter'
+          });
+
+          // Build row data with all 6 specified columns
+          const rows = flat.map(s => {
+            const statusLabel = getStockStatus(s.qty, s.min).label;
+            return [
+              s.familyName || '—',
+              s.brand || 'Redkin Shades EQ',
+              s.fullName || '—',
+              s.qty.toString(),
+              statusLabel,
+              s.dupe || '—'
+            ];
+          });
+
+          doc.autoTable({
+            startY: 72,
+            head: [['Color Family', 'Brand', 'Complete Shade Number & Name', 'Quantity', 'Status', 'Backup Dupe Match']],
+            body: rows,
+            theme: 'grid',
+            headStyles: {
+              fillColor: [16, 20, 32], // salon-900 header
+              textColor: [255, 255, 255],
+              fontStyle: 'bold',
+              fontSize: 9,
+              halign: 'left'
+            },
+            styles: {
+              fontSize: 8,
+              cellPadding: 4.5,
+              textColor: [30, 41, 59],
+              valign: 'middle'
+            },
+            columnStyles: {
+              0: { cellWidth: 105, fontStyle: 'bold' },
+              1: { cellWidth: 110 },
+              2: { cellWidth: 155, fontStyle: 'bold' },
+              3: { cellWidth: 55, halign: 'center', fontStyle: 'bold' },
+              4: { cellWidth: 85, halign: 'center' },
+              5: { cellWidth: 'auto' }
+            },
+            didParseCell: function(data) {
+              if (data.section === 'body') {
+                if (data.column.index === 4) {
+                  const val = data.cell.raw;
+                  if (val === 'Out of Stock') {
+                    data.cell.styles.textColor = [220, 38, 38];
+                    data.cell.styles.fontStyle = 'bold';
+                  } else if (val === 'Low Stock') {
+                    data.cell.styles.textColor = [217, 119, 6];
+                    data.cell.styles.fontStyle = 'bold';
+                  } else {
+                    data.cell.styles.textColor = [5, 150, 105];
+                    data.cell.styles.fontStyle = 'bold';
+                  }
+                }
+              }
+            },
+            didDrawPage: function(data) {
+              // Salon Branding Top Header
+              doc.setFontSize(14);
+              doc.setTextColor(16, 20, 32);
+              doc.text('REDKEN SHADES EQ & PAUL MITCHELL MASTER INVENTORY', 40, 34);
+
+              doc.setFontSize(8.5);
+              doc.setTextColor(100, 116, 139);
+              const totalBottles = flat.reduce((sum, item) => sum + Number(item.qty), 0);
+              const lowStockCount = flat.filter(item => item.qty <= item.min).length;
+              doc.text(`Dispensary Inventory Report • Generated: ${new Date().toLocaleDateString()} | Total Shades: ${flat.length} | Total Stock: ${totalBottles} bottles | Low-Stock Alerts: ${lowStockCount}`, 40, 50);
+
+              // Footer Page Number
+              const pageCount = doc.internal.getNumberOfPages();
+              doc.setFontSize(8);
+              doc.setTextColor(148, 163, 184);
+              doc.text(`Page ${data.pageNumber} of ${pageCount}`, doc.internal.pageSize.width - 70, doc.internal.pageSize.height - 18);
+            }
+          });
+
+          const fileName = `Redken_Shades_EQ_Master_Inventory_${new Date().toISOString().slice(0, 10)}.pdf`;
+          doc.save(fileName);
+          showToast('Master Inventory PDF downloaded successfully!', 'info');
+        } else {
+          // Browser printable PDF fallback
+          fallbackPrintPDF(flat);
+        }
+      } catch (err) {
+        console.error('PDF generation error:', err);
+        fallbackPrintPDF(flat);
+      }
+    }
+
+    function fallbackPrintPDF(flat) {
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        showToast('Please allow popups to export PDF', 'warning');
+        return;
+      }
+      const tableRows = flat.map(s => {
+        const st = getStockStatus(s.qty, s.min).label;
+        return `
+          <tr>
+            <td><strong>${s.familyName}</strong></td>
+            <td>${s.brand}</td>
+            <td><strong>${s.fullName}</strong></td>
+            <td style="text-align:center;"><strong>${s.qty}</strong></td>
+            <td><span class="${st.toLowerCase().replace(/ /g, '-')}">${st}</span></td>
+            <td>${s.dupe || '—'}</td>
+          </tr>
+        `;
+      }).join('');
+
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Redken Shades EQ Master Inventory Sheet</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 24px; color: #1e293b; }
+            h1 { margin-bottom: 4px; font-size: 18px; text-transform: uppercase; }
+            .meta { font-size: 12px; color: #64748b; margin-bottom: 16px; }
+            table { width: 100%; border-collapse: collapse; font-size: 11px; }
+            th { background: #0f172a; color: #fff; text-align: left; padding: 7px 8px; }
+            td { padding: 6px 8px; border-bottom: 1px solid #e2e8f0; }
+            .in-stock { color: #059669; font-weight: bold; }
+            .low-stock { color: #d97706; font-weight: bold; }
+            .out-of-stock { color: #dc2626; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <h1>Redken Shades EQ & Paul Mitchell Master Inventory</h1>
+          <div class="meta">Report Generated: ${new Date().toLocaleDateString()} • Total Shades: ${flat.length}</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Color Family</th>
+                <th>Brand</th>
+                <th>Complete Shade Number & Name</th>
+                <th style="text-align:center;">Quantity</th>
+                <th>Status</th>
+                <th>Backup Dupe Match</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tableRows}
+            </tbody>
+          </table>
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+      }, 500);
     }
 
     function resetAllFilters() {
@@ -2468,8 +2614,8 @@
         showToast('Dupe formula copied to clipboard');
       });
 
-      // Export CSV
-      document.getElementById('btn-export-csv').addEventListener('click', exportMasterCSV);
+      // Export PDF Event
+      document.getElementById('btn-export-pdf').addEventListener('click', exportMasterPDF);
 
       // Reset Data
       document.getElementById('btn-reset-data').addEventListener('click', () => {
